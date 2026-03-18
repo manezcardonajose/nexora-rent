@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-danger text-white">
+                <h4 class="mb-0"><i class="bi bi-calendar-x"></i> Nuevo bloqueo para {{ propiedad.nombre }}</h4>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-warning">
+                    <i class="bi bi-exclamation-triangle"></i>
+                    <strong>Importante:</strong> Durante las fechas seleccionadas, las habitaciones bloqueadas no estarán disponibles para reservas.
+                </div>
+
+                <form method="POST" action="">
+                    {{ form.hidden_tag() }}
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            {{ form.fecha_inicio.label(class="form-label") }}
+                            {{ form.fecha_inicio(class="form-control", type="date") }}
+                            {% for error in form.fecha_inicio.errors %}
+                            <span class="text-danger">{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            {{ form.fecha_fin.label(class="form-label") }}
+                            {{ form.fecha_fin(class="form-control", type="date") }}
+                            {% for error in form.fecha_fin.errors %}
+                            <span class="text-danger">{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        {{ form.habitacion_id.label(class="form-label") }}
+                        {{ form.habitacion_id(class="form-select") }}
+                        <small class="text-muted">Selecciona una habitación específica o "Toda la propiedad"</small>
+                    </div>
+
+                    <div class="mb-3">
+                        {{ form.motivo.label(class="form-label") }}
+                        {{ form.motivo(class="form-select") }}
+                    </div>
+
+                    <div class="mb-3">
+                        {{ form.descripcion.label(class="form-label") }}
+                        {{ form.descripcion(class="form-control", rows=3, placeholder="Explica el motivo del bloqueo...") }}
+                    </div>
+
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for('bloqueos.index', propiedad_id=propiedad.id) }}" class="btn btn-secondary me-md-2">
+                            <i class="bi bi-x-circle"></i> Cancelar
+                        </a>
+                        <button type="submit" class="btn btn-danger">
+                            <i class="bi bi-check-circle"></i> Crear bloqueo
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

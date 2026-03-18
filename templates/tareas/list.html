@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Tareas</h1>
+<a href="{{ url_for('crear_tarea') }}" class="btn btn-primary mb-3">Nueva Tarea</a>
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Título</th>
+            <th>Propiedad</th>
+            <th>Reserva</th>
+            <th>Fecha programada</th>
+            <th>Tipo</th>
+            <th>Asignado a</th>
+            <th>Completada</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for t in tareas %}
+        <tr>
+            <td>{{ t.titulo }}</td>
+            <td>{{ t.propiedad.nombre }}</td>
+            <td>{% if t.reserva %}{{ t.reserva.huesped_nombre }}{% else %}-{% endif %}</td>
+            <td>{{ t.fecha_programada }}</td>
+            <td>{{ t.tipo }}</td>
+            <td>{% if t.asignado %}{{ t.asignado.username }}{% else %}-{% endif %}</td>
+            <td>{{ 'Sí' if t.completada else 'No' }}</td>
+            <td>
+                <form method="POST" action="{{ url_for('toggle_tarea', id=t.id) }}" style="display:inline;">
+                    <button type="submit" class="btn btn-sm btn-warning">Marcar como {{ 'pendiente' if t.completada else 'completada' }}</button>
+                </form>
+            </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="8">No hay tareas.</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

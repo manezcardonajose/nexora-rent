@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1>Gasto #{{ gasto.id }}</h1>
+    <div>
+        <a href="{{ url_for('gastos.editar', id=gasto.id) }}" class="btn btn-warning">Editar</a>
+        <a href="{{ url_for('gastos.index') }}" class="btn btn-secondary">Volver</a>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <p><strong>Propiedad:</strong> {{ gasto.propiedad.nombre }}</p>
+        <p><strong>Fecha:</strong> {{ gasto.fecha }}</p>
+        <p><strong>Concepto:</strong> {{ gasto.concepto }}</p>
+        <p><strong>Categoría:</strong> {{ gasto.categoria }}</p>
+        <p><strong>Importe:</strong> {{ gasto.importe }} {{ gasto.moneda }}</p>
+        <p><strong>Pagado:</strong> {% if gasto.pagado %}Sí{% else %}No{% endif %}</p>
+        <p><strong>Forma de pago:</strong> {{ gasto.forma_pago or 'No especificado' }}</p>
+        <p><strong>Proveedor:</strong> {{ gasto.proveedor or 'No especificado' }}</p>
+        <p><strong>Notas:</strong> {{ gasto.notas or 'Sin notas' }}</p>
+        <p><strong>Registrado por:</strong> {{ gasto.usuario.username if gasto.usuario else 'Desconocido' }}</p>
+    </div>
+</div>
+{% endblock %}

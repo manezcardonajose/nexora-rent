@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-warning text-dark">
+                <h4 class="mb-0"><i class="bi bi-pencil"></i> Editar habitación: {{ habitacion.nombre }}</h4>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="">
+                    {{ form.hidden_tag() }}
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            {{ form.nombre.label(class="form-label") }}
+                            {{ form.nombre(class="form-control") }}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            {{ form.tipo.label(class="form-label") }}
+                            {{ form.tipo(class="form-select") }}
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            {{ form.capacidad.label(class="form-label") }}
+                            {{ form.capacidad(class="form-control", type="number") }}
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            {{ form.precio_base.label(class="form-label") }}
+                            <div class="input-group">
+                                {{ form.precio_base(class="form-control", type="number", step="0.01") }}
+                                <span class="input-group-text">€</span>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            {{ form.orden.label(class="form-label") }}
+                            {{ form.orden(class="form-control", type="number") }}
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        {{ form.camas.label(class="form-label") }}
+                        {{ form.camas(class="form-control") }}
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <div class="form-check">
+                                {{ form.tiene_bano_suite(class="form-check-input") }}
+                                {{ form.tiene_bano_suite.label(class="form-check-label") }}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-check">
+                                {{ form.activa(class="form-check-input") }}
+                                {{ form.activa.label(class="form-check-label") }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        {{ form.observaciones.label(class="form-label") }}
+                        {{ form.observaciones(class="form-control", rows=3) }}
+                    </div>
+
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for('habitaciones.index', propiedad_id=habitacion.propiedad_id) }}" class="btn btn-secondary me-md-2">
+                            <i class="bi bi-x-circle"></i> Cancelar
+                        </a>
+                        <button type="submit" class="btn btn-warning">
+                            <i class="bi bi-check-circle"></i> Actualizar
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

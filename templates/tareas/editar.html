@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h4>Editar tarea #{{ tarea.id }}</h4>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="">
+                    {{ form.hidden_tag() }}
+                    <div class="mb-3">
+                        {{ form.propiedad_id.label(class="form-label") }}
+                        {{ form.propiedad_id(class="form-select") }}
+                    </div>
+                    <div class="mb-3">
+                        {{ form.reserva_id.label(class="form-label") }}
+                        {{ form.reserva_id(class="form-select") }}
+                    </div>
+                    <div class="mb-3">
+                        {{ form.tipo.label(class="form-label") }}
+                        {{ form.tipo(class="form-select") }}
+                    </div>
+                    <div class="mb-3">
+                        {{ form.descripcion.label(class="form-label") }}
+                        {{ form.descripcion(class="form-control", rows=3) }}
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            {{ form.fecha_asignada.label(class="form-label") }}
+                            {{ form.fecha_asignada(class="form-control", type="date") }}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            {{ form.fecha_limite.label(class="form-label") }}
+                            {{ form.fecha_limite(class="form-control", type="date") }}
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        {{ form.asignado_a_id.label(class="form-label") }}
+                        {{ form.asignado_a_id(class="form-select") }}
+                    </div>
+                    <div class="mb-3">
+                        {{ form.notas.label(class="form-label") }}
+                        {{ form.notas(class="form-control", rows=2) }}
+                    </div>
+                    <div class="mb-3 form-check">
+                        {{ form.completada(class="form-check-input") }}
+                        {{ form.completada.label(class="form-check-label") }}
+                    </div>
+                    <button type="submit" class="btn btn-primary">Actualizar tarea</button>
+                    <a href="{{ url_for('tareas.index') }}" class="btn btn-secondary">Cancelar</a>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

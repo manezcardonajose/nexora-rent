@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h4>Nuevo ingreso</h4>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="">
+                    {{ form.hidden_tag() }}
+                    <div class="mb-3">
+                        {{ form.propiedad_id.label(class="form-label") }}
+                        {{ form.propiedad_id(class="form-select") }}
+                    </div>
+                    <div class="mb-3">
+                        {{ form.reserva_id.label(class="form-label") }}
+                        {{ form.reserva_id(class="form-select") }}
+                        <small class="text-muted">Opcional, asocia el ingreso a una reserva existente</small>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            {{ form.fecha.label(class="form-label") }}
+                            {{ form.fecha(class="form-control", type="date") }}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            {{ form.metodo_pago.label(class="form-label") }}
+                            {{ form.metodo_pago(class="form-select") }}
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        {{ form.concepto.label(class="form-label") }}
+                        {{ form.concepto(class="form-control") }}
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            {{ form.cantidad.label(class="form-label") }}
+                            {{ form.cantidad(class="form-control") }}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            {{ form.moneda.label(class="form-label") }}
+                            {{ form.moneda(class="form-select") }}
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        {{ form.observaciones.label(class="form-label") }}
+                        {{ form.observaciones(class="form-control", rows=3) }}
+                    </div>
+                    <button type="submit" class="btn btn-primary">Guardar ingreso</button>
+                    <a href="{{ url_for('ingresos.index') }}" class="btn btn-secondary">Cancelar</a>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

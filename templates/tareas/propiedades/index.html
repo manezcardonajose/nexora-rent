@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1>Mis propiedades</h1>
+    <a href="{{ url_for('propiedades.nueva') }}" class="btn btn-success">
+        <i class="bi bi-plus-circle"></i> Nueva propiedad
+    </a>
+</div>
+
+{% if propiedades %}
+<div class="row">
+    {% for p in propiedades %}
+    <div class="col-md-4 mb-3">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title">{{ p.nombre }}</h5>
+                <h6 class="card-subtitle mb-2 text-muted">{{ p.ciudad }}, {{ p.pais }}</h6>
+                <p class="card-text">{{ p.descripcion[:100] }}...</p>
+                <p class="card-text">
+                    <strong>{{ p.precio_noche }} {{ p.moneda }}</strong> / noche<br>
+                    <span class="badge bg-info">{{ p.num_habitaciones }} hab · {{ p.num_banos }} baños · {{ p.capacidad_max }} pers</span>
+                </p>
+            </div>
+            <div class="card-footer">
+                <a href="{{ url_for('propiedades.ver', id=p.id) }}" class="btn btn-sm btn-primary">Ver</a>
+                <a href="{{ url_for('propiedades.editar', id=p.id) }}" class="btn btn-sm btn-warning">Editar</a>
+                <form action="{{ url_for('propiedades.eliminar', id=p.id) }}" method="POST" class="d-inline">
+                    <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('¿Eliminar propiedad?')">Eliminar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<p class="text-muted">No tienes propiedades registradas. ¡Crea una!</p>
+{% endif %}
+{% endblock %}

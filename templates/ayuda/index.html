@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <h1 class="mb-4"><i class="bi bi-question-circle"></i> Centro de Ayuda</h1>
+
+    <div class="row">
+        <div class="col-md-3 mb-3">
+            <div class="list-group">
+                <a href="#intro" class="list-group-item list-group-item-action">📘 Introducción</a>
+                <a href="#propiedades" class="list-group-item list-group-item-action">🏠 Propiedades</a>
+                <a href="#habitaciones" class="list-group-item list-group-item-action">🛏️ Habitaciones</a>
+                <a href="#reservas" class="list-group-item list-group-item-action">📅 Reservas</a>
+                <a href="#huespedes" class="list-group-item list-group-item-action">👥 Huéspedes</a>
+                <a href="#pagos" class="list-group-item list-group-item-action">💰 Pagos</a>
+                <a href="#bloqueos" class="list-group-item list-group-item-action">🔒 Bloqueos</a>
+                <a href="#faq" class="list-group-item list-group-item-action">❓ Preguntas Frecuentes</a>
+            </div>
+        </div>
+
+        <div class="col-md-9">
+            <div class="card">
+                <div class="card-body">
+                    <h2 id="intro">📘 Introducción</h2>
+                    <p>Bienvenido al Gestor de Alquiler Vacacional. Esta aplicación te ayuda a administrar tus propiedades, reservas y huéspedes cumpliendo con la normativa española SES.HOSPEDAJES.</p>
+
+                    <hr>
+
+                    <h2 id="propiedades">🏠 Propiedades</h2>
+                    <p><strong>Cómo crear una propiedad:</strong></p>
+                    <ol>
+                        <li>Ve a "Propiedades" en el menú</li>
+                        <li>Haz clic en "Nueva propiedad"</li>
+                        <li>Completa todos los datos</li>
+                        <li>Configura impuestos (IVA/IGIC)</li>
+                    </ol>
+
+                    <hr>
+
+                    <h2 id="habitaciones">🛏️ Habitaciones</h2>
+                    <p>Cada propiedad puede tener múltiples habitaciones con precios individuales.</p>
+                    <p><strong>Para crear habitaciones:</strong></p>
+                    <ol>
+                        <li>Ve a la propiedad</li>
+                        <li>Haz clic en "Habitaciones"</li>
+                        <li>Añade cada habitación con su precio</li>
+                    </ol>
+
+                    <hr>
+
+                    <h2 id="reservas">📅 Reservas</h2>
+                    <p><strong>Proceso de reserva:</strong></p>
+                    <ol>
+                        <li>Ve a "Reservas" → "Nueva reserva"</li>
+                        <li>Selecciona propiedad y fechas</li>
+                        <li>Indica número de viajeros</li>
+                        <li>Selecciona las habitaciones</li>
+                        <li>Guarda la reserva</li>
+                    </ol>
+
+                    <hr>
+
+                    <h2 id="huespedes">👥 Huéspedes</h2>
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle"></i>
+                        <strong>Obligatorio por ley:</strong> Debes registrar a TODOS los huéspedes mayores de 14 años.
+                    </div>
+                    <p>Después de crear una reserva, el sistema te lleva automáticamente a la página de huéspedes. Añade uno por uno hasta completar el número indicado.</p>
+
+                    <hr>
+
+                    <h2 id="pagos">💰 Pagos</h2>
+                    <p>Registra los pagos de cada reserva:</p>
+                    <ol>
+                        <li>Ve a la reserva → "Pagos"</li>
+                        <li>Haz clic en "Nuevo pago"</li>
+                        <li>Indica importe y método</li>
+                        <li>El sistema calcula automáticamente el saldo pendiente</li>
+                    </ol>
+
+                    <hr>
+
+                    <h2 id="bloqueos">🔒 Bloqueos</h2>
+                    <p>Para marcar una propiedad como no disponible por mantenimiento o uso personal:</p>
+                    <ol>
+                        <li>Ve a "Bloqueos" en el menú</li>
+                        <li>Selecciona la propiedad</li>
+                        <li>Crea un bloqueo con las fechas deseadas</li>
+                    </ol>
+
+                    <hr>
+
+                    <h2 id="faq">❓ Preguntas Frecuentes</h2>
+
+                    <div class="accordion" id="faqAccordion">
+                        <div class="accordion-item">
+                            <h3 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq1">
+                                    ¿Olvidé mi contraseña?
+                                </button>
+                            </h3>
+                            <div id="faq1" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                                <div class="accordion-body">
+                                    Contacta al administrador para restablecer tu contraseña.
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="accordion-item">
+                            <h3 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq2">
+                                    ¿Puedo cancelar una reserva?
+                                </button>
+                            </h3>
+                            <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                                <div class="accordion-body">
+                                    Sí, edita la reserva y cambia el estado a "Cancelada".
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="accordion-item">
+                            <h3 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq3">
+                                    ¿Qué hago si no puedo registrar un huésped?
+                                </button>
+                            </h3>
+                            <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                                <div class="accordion-body">
+                                    Asegúrate de que el número de huéspedes registrados no supere el total indicado en la reserva.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

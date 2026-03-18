@@ -1,0 +1,65 @@
+<h3>🛏️ Habitaciones asignadas</h3>
+<table class="table table-sm">
+    <thead>
+        <tr>
+            <th>Habitación</th>
+            <th>Tipo</th>
+            <th>Precio/noche</th>
+            <th>Total {{ noches }} noches</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for rh in reserva.habitaciones_asignadas %}
+        <tr>
+            <td>{{ rh.habitacion.nombre }}</td>
+            <td>{{ rh.habitacion.tipo }} {% if rh.habitacion.tiene_bano_suite %}<span class="badge bg-success">Suite</span>{% endif %}</td>
+            <td>{{ rh.precio_aplicado }} €</td>
+            <td>{{ rh.precio_aplicado * noches }} €</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<h4>💰 Desglose económico</h4>
+<table class="table table-sm">
+    <tr>
+        <th>Subtotal habitaciones ({{ noches }} noches):</th>
+        <td class="text-end">{{ reserva.subtotal_habitaciones|round(2) }} €</td>
+    </tr>
+    <tr>
+        <th>Impuesto ({{ reserva.propiedad.tipo_impuesto }} {{ reserva.propiedad.porcentaje_impuesto }}%):</th>
+        <td class="text-end">+ {{ reserva.total_impuestos|round(2) }} €</td>
+    </tr>
+    {% if reserva.propiedad.aplicar_retencion %}
+    <tr>
+        <th>Retención ({{ reserva.propiedad.porcentaje_retencion }}%):</th>
+        <td class="text-end">- {{ reserva.total_retencion|round(2) }} €</td>
+    </tr>
+    {% endif %}
+    <tr class="table-primary fw-bold">
+        <th>TOTAL:</th>
+        <td class="text-end">{{ reserva.precio_total|round(2) }} €</td>
+    </tr>
+
+    <<div class="btn-group mb-3">
+    <a href="{{ url_for('reservas.editar', id=reserva.id) }}" class="btn btn-warning">
+        <i class="bi bi-pencil"></i> Editar
+    </a>
+    <a href="{{ url_for('huespedes.index', reserva_id=reserva.id) }}" class="btn btn-info">
+        <i class="bi bi-people"></i> Huéspedes ({{ reserva.huespedes.count() }}/{{ reserva.num_huespedes }})
+    </a>
+    <a href="{{ url_for('pagos.index', reserva_id=reserva.id) }}" class="btn btn-success">
+        <i class="bi bi-cash-coin"></i> Pagos ({{ reserva.pagos.count() }})
+    </a>
+    <a href="{{ url_for('reservas.pdf_reserva', id=reserva.id) }}" class="btn btn-primary">
+        <i class="bi bi-file-pdf"></i> PDF
+    </a>
+    <a href="{{ url_for('reservas.whatsapp_reserva', id=reserva.id) }}" class="btn btn-success">
+        <i class="bi bi-whatsapp"></i> WhatsApp
+    </a>
+    <a href="{{ url_for('reservas.index') }}" class="btn btn-secondary">
+        <i class="bi bi-arrow-left"></i> Volver
+    </a>
+</div>
+    </div>
+</table>

@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1>
+        <i class="bi bi-people"></i> Huéspedes de reserva #{{ reserva.id }}
+        <small class="text-muted">{{ reserva.huespedes.count() }} de {{ reserva.num_huespedes }} viajeros</small>
+    </h1>
+    <div>
+        {% if reserva.huespedes.count() < reserva.num_huespedes %}
+        <a href="{{ url_for('huespedes.nuevo', reserva_id=reserva.id) }}" class="btn btn-success">
+            <i class="bi bi-plus-circle"></i> Añadir huésped
+        </a>
+        {% endif %}
+        <a href="{{ url_for('reservas.ver', id=reserva.id) }}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Volver a la reserva
+        </a>
+    </div>
+</div>
+
+<!-- Barra de progreso -->
+<div class="progress mb-3" style="height: 25px;">
+    <div class="progress-bar bg-success" role="progressbar"
+         style="width: {{ (reserva.huespedes.count() / reserva.num_huespedes * 100)|round }}%"
+         aria-valuenow="{{ reserva.huespedes.count() }}" aria-valuemin="0" aria-valuemax="{{ reserva.num_huespedes }}">
+        {{ reserva.huespedes.count() }} de {{ reserva.num_huespedes }} registrados
+    </div>
+</div>
+
+{% if reserva.huespedes.count() == 0 %}
+<div class="alert alert-warning">
+    <i class="bi bi-exclamation-triangle"></i>
+    No hay huéspedes registrados. Debes registrar al menos al titular.
+</div>
+{% endif %}
+
+<!-- Lista de huéspedes -->
+{% if reserva.huespedes.count() > 0 %}
+<div class="row">
+    {% for h in reserva.huespedes %}
+    <div class="col-md-6 mb-3">
+        <div class="card {% if loop.first %}border-primary{% endif %}">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    {% if loop.first %}
+                    <i class="bi bi-person-badge text-primary"></i> TITULAR
+                    {% else %}
+                    <i class="bi bi-person"></i> Huésped #{{ loop.index }}
+                    {% endif %}
+                </h5>
+                <div>
+                    <a href="{{ url_for('huespedes.editar', id=h.id) }}" class="btn btn-sm btn-warning">
+                        <i class="bi bi-pencil"></i>
+                    </a>
+                    <form action="{{ url_for('huespedes.eliminar', id=h.id) }}" method="POST" class="d-inline">
+                        <button type="submit" class="btn btn-sm btn-danger"
+                                onclick="return confirm('¿Eliminar este huésped?')">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-6">
+                        <strong>Nombre:</strong> {{ h.nombre }} {{ h.apellidos }}<br>
+                        <strong>Nacimiento:</strong> {{ h.fecha_nacimiento }}<br>
+                        <strong>Nacionalidad:</strong> {{ h.nacionalidad }}<br>
+                        <strong>Sexo:</strong> {{ h.sexo }}
+                    </div>
+                    <div class="col-6">
+                        <strong>Documento:</strong> {{ h.tipo_documento }} {{ h.numero_documento }}<br>
+                        {% if h.numero_soporte %}
+                        <strong>Soporte:</strong> {{ h.numero_soporte }}<br>
+                        {% endif %}
+                        <strong>Email:</strong> {{ h.email or 'No' }}<br>
+                        <strong>Teléfono:</strong> {{ h.telefono or 'No' }}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+{% endblock %}

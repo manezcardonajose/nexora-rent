@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1 class="mb-4"><i class="bi bi-file-bar-graph"></i> Informes y estadísticas</h1>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="bi bi-calendar-check"></i> Informe de reservas</h5>
+            </div>
+            <div class="card-body">
+                <p>Consulta todas las reservas por período, propiedad y estado. Incluye estadísticas de ocupación e ingresos.</p>
+                <form action="{{ url_for('informes.informe_reservas') }}" method="GET" class="mt-3">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Propiedad</label>
+                            <select name="propiedad_id" class="form-select">
+                                <option value="">Todas las propiedades</option>
+                                {% for p in propiedades %}
+                                <option value="{{ p.id }}">{{ p.nombre }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Formato</label>
+                            <select name="formato" class="form-select">
+                                <option value="html">Vista en pantalla</option>
+                                <option value="csv">CSV (Excel)</option>
+                                <option value="pdf">PDF</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Fecha inicio</label>
+                            <input type="date" name="fecha_inicio" class="form-control">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Fecha fin</label>
+                            <input type="date" name="fecha_fin" class="form-control">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-file-earmark"></i> Generar informe
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0"><i class="bi bi-calculator"></i> Informe financiero</h5>
+            </div>
+            <div class="card-body">
+                <p>Análisis de ingresos vs gastos por período. Desglose por categorías y métodos de pago.</p>
+                <form action="{{ url_for('informes.informe_financiero') }}" method="GET" class="mt-3">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Propiedad</label>
+                            <select name="propiedad_id" class="form-select">
+                                <option value="">Todas las propiedades</option>
+                                {% for p in propiedades %}
+                                <option value="{{ p.id }}">{{ p.nombre }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Formato</label>
+                            <select name="formato" class="form-select">
+                                <option value="html">Vista en pantalla</option>
+                                <option value="csv">CSV (Excel)</option>
+                                <option value="pdf">PDF</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Fecha inicio</label>
+                            <input type="date" name="fecha_inicio" class="form-control" value="{{ now().strftime('%Y-%m-01') }}">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Fecha fin</label>
+                            <input type="date" name="fecha_fin" class="form-control" value="{{ now().strftime('%Y-%m-%d') }}">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-success">
+                        <i class="bi bi-file-earmark"></i> Generar informe
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

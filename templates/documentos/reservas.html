@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Documento de Reserva #{{ reserva.id }}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 2cm;
+            color: #333;
+        }
+
+        h1 {
+            color: #2c3e50;
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 10px;
+            text-align: center;
+        }
+
+        h2 {
+            color: #2c3e50;
+            border-bottom: 1px solid #bdc3c7;
+            padding-bottom: 5px;
+            margin-top: 25px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+
+        th {
+            background: #34495e;
+            color: white;
+            text-align: left;
+            padding: 8px;
+        }
+
+        td {
+            padding: 8px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .total {
+            font-weight: bold;
+            font-size: 1.2em;
+            color: #27ae60;
+        }
+
+        .pendiente {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+
+        .pagado {
+            color: #27ae60;
+            font-weight: bold;
+        }
+
+        .footer {
+            margin-top: 40px;
+            font-size: 0.9em;
+            color: #7f8c8d;
+            text-align: center;
+            border-top: 1px solid #ecf0f1;
+            padding-top: 15px;
+        }
+
+        .info-box {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+
+        .badge-pagado {
+            background: #27ae60;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 3px;
+            font-size: 0.8em;
+        }
+
+        .badge-pendiente {
+            background: #e74c3c;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 3px;
+            font-size: 0.8em;
+        }
+    </style>
+</head>
+<body>
+    <h1>DOCUMENTO DE RESERVA</h1>
+
+    <div style="text-align: right; font-size: 0.9em; margin-bottom: 20px;">
+        <strong>Nº de reserva:</strong> {{ reserva.id }}<br>
+        <strong>Fecha de emisión:</strong> {{ now().strftime('%d/%m/%Y %H:%M') }}
+    </div>
+
+    <!-- DATOS DE LA PROPIEDAD -->
+    <h2>1. DATOS DE LA PROPIEDAD</h2>
+    <table>
+        <tr><th width="30%">Propiedad:</th><td>{{ reserva.propiedad.nombre }}</td></tr>
+        <tr><th>Dirección:</th><td>{{ reserva.propiedad.direccion }}, {{ reserva.propiedad.ciudad }}, {{ reserva.propiedad.pais }}</td></tr>
+    </table>
+
+    <!-- DETALLE DE LA RESERVA -->
+    <h2>2. DETALLE DE LA RESERVA</h2>
+    <table>
+        <tr><th>Fecha de entrada:</th><td>{{ reserva.fecha_entrada }} (a partir de 16:00h)</td></tr>
+        <tr><th>Fecha de salida:</th><td>{{ reserva.fecha_salida }} (hasta 11:00h)</td></tr>
+        <tr><th>Noches:</th><td><strong>{{ noches }}</strong></td></tr>
+        <tr><th>Huéspedes:</th><td>{{ reserva.num_huespedes }} ({{ reserva.num_menores }} menores)</td></tr>
+    </table>
+
+    <!-- HABITACIONES ASIGNADAS -->
+    <h2>3. HABITACIONES ASIGNADAS</h2>
+    {% if habitaciones %}
+    <table>
+        <thead>
+            <tr><th>Habitación</th><th>Tipo</th><th>Precio/noche</th><th>Total {{ noches }} noches</th></tr>
+        </thead>
+        <tbody>
+            {% for h in habitaciones %}
+            <tr>
+                <td>{{ h.nombre }}</td>
+                <td>{{ h.tipo }}</td>
+                <td>{{ "%.2f"|format(h.precio) }} €</td>
+                <td>{{ "%.2f"|format(h.precio * noches) }} €</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p>No hay habitaciones asignadas individualmente</p>
+    {% endif %}
+
+    <!-- RESUMEN ECONÓMICO -->
+    <h2>4. RESUMEN ECONÓMICO</h2>
+    <table>
+        <tr><th>Subtotal habitaciones:</th><td class="text-end">{{ "%.2f"|format(reserva.subtotal_habitaciones) }} €</td></tr>
+        <tr><th>Impuestos ({{ reserva.propiedad.porcentaje_impuesto }}% {{ reserva.propiedad.tipo_impuesto }}):</th><td class="text-end">{{ "%.2f"|format(reserva.total_impuestos) }} €</td></tr>
+        {% if reserva.total_retencion > 0 %}
+        <tr><th>Retención ({{ reserva.propiedad.porcentaje_retencion }}%):</th><td class="text-end">-{{ "%.2f"|format(reserva.total_retencion) }} €</td></tr>
+        {% endif %}
+        <tr style="font-size: 1.2em; background-color: #ecf0f1;">
+            <th>TOTAL RESERVA:</th>
+            <td class="text-end"><strong>{{ "%.2f"|format(reserva.precio_total) }} €</strong></td>
+        </tr>
+    </table>
+
+    <!-- ESTADO DE PAGOS -->
+    <h2>5. ESTADO DE PAGOS</h2>
+    {% set pagos = reserva.pagos.all() %}
+
+    <div class="info-box">
+        <table style="margin: 0;">
+            <tr>
+                <th>Total reserva:</th>
+                <td class="text-end">{{ "%.2f"|format(reserva.precio_total) }} €</td>
+            </tr>
+            <tr>
+                <th>Total pagado:</th>
+                <td class="text-end"><span class="pagado">{{ "%.2f"|format(reserva.deposito_pagado) }} €</span></td>
+            </tr>
+            {% if reserva.saldo_pendiente > 0 %}
+            <tr>
+                <th>SALDO PENDIENTE:</th>
+                <td class="text-end"><span class="pendiente">{{ "%.2f"|format(reserva.saldo_pendiente) }} €</span></td>
+            </tr>
+            {% else %}
+            <tr>
+                <th>ESTADO:</th>
+                <td class="text-end"><span class="badge-pagado">✓ PAGADO COMPLETAMENTE</span></td>
+            </tr>
+            {% endif %}
+        </table>
+    </div>
+
+    <!-- INFORMACIÓN ADICIONAL -->
+    <div class="footer">
+        <p><strong>Documento generado el {{ now().strftime('%d/%m/%Y %H:%M') }}</strong></p>
+        <p>Este documento incluye todos los datos requeridos por la legislación española para el registro de viajeros.</p>
+        <p>En cumplimiento de la Ley Orgánica 4/2015 de Protección de la Seguridad Ciudadana.</p>
+    </div>
+</body>
+</html>

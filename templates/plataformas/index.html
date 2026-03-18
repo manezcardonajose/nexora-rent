@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1><i class="bi bi-cloud-arrow-up"></i> Plataformas de reservas conectadas</h1>
+    <div>
+        <a href="{{ url_for('plataformas.sincronizar_todo') }}" class="btn btn-primary me-2">
+            <i class="bi bi-arrow-repeat"></i> Sincronizar todo
+        </a>
+        <a href="{{ url_for('plataformas.nueva') }}" class="btn btn-success">
+            <i class="bi bi-plus-circle"></i> Conectar nueva plataforma
+        </a>
+    </div>
+</div>
+
+{% if plataformas %}
+<div class="row">
+    {% for p in plataformas %}
+    <div class="col-md-4 mb-3">
+        <div class="card h-100 {% if not p.activa %}bg-light{% endif %}">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    {% if p.nombre == 'airbnb' %}
+                    <i class="bi bi-airbnb text-danger"></i>
+                    {% elif p.nombre == 'booking' %}
+                    <i class="bi bi-building text-primary"></i>
+                    {% else %}
+                    <i class="bi bi-cloud text-secondary"></i>
+                    {% endif %}
+                    {{ p.nombre_personalizado or p.nombre|capitalize }}
+                </h5>
+                <span class="badge {% if p.activa %}bg-success{% else %}bg-secondary{% endif %}">
+                    {% if p.activa %}Activa{% else %}Inactiva{% endif %}
+                </span>
+            </div>
+            <div class="card-body">
+                <p><strong>Email:</strong> {{ p.email_cuenta or 'No especificado' }}</p>
+                <p><strong>Conectada desde:</strong> {{ p.fecha_conexion.strftime('%d/%m/%Y') }}</p>
+                <p><strong>Calendarios:</strong> {{ p.calendarios.count() }}</p>
+            </div>
+            <div class="card-footer">
+                <a href="{{ url_for('plataformas.calendarios', id=p.id) }}" class="btn btn-sm btn-info">
+                    <i class="bi bi-calendar"></i> Ver calendarios
+                </a>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="alert alert-info">
+    <i class="bi bi-info-circle"></i> No hay plataformas conectadas.
+    <a href="{{ url_for('plataformas.nueva') }}" class="alert-link">Conecta tu primera plataforma</a> para sincronizar reservas automáticamente.
+</div>
+{% endif %}
+
+<!-- Resumen de sincronización -->
+<div class="card mt-3">
+    <div class="card-header bg-light">
+        <h5 class="mb-0"><i class="bi bi-arrow-repeat"></i> Últimas sincronizaciones</h5>
+    </div>
+    <div class="card-body">
+        <table class="table table-sm">
+            <thead>
+                <tr>
+                    <th>Plataforma</th>
+                    <th>Calendario</th>
+                    <th>Propiedad</th>
+                    <th>Última sincronización</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in plataformas %}
+                {% for cal in p.calendarios %}
+                <tr>
+                    <td>{{ p.nombre|capitalize }}</td>
+                    <td>{{ cal.nombre or 'Principal' }}</td>
+                    <td>{{ cal.propiedad.nombre }}</td>
+                    <td>
+                        {% if cal.ultima_sincronizacion %}
+                        {{ cal.ultima_sincronizacion.strftime('%d/%m/%Y %H:%M') }}
+                        {% else %}
+                        <span class="text-warning">Nunca</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

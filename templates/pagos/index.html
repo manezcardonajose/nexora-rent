@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1>
+        <i class="bi bi-cash-coin"></i> Pagos de reserva #{{ reserva.id }}
+        <small class="text-muted">{{ reserva.huesped_nombre }} {{ reserva.huesped_apellidos }}</small>
+    </h1>
+    <div>
+        <a href="{{ url_for('pagos.nuevo', reserva_id=reserva.id) }}" class="btn btn-success">
+            <i class="bi bi-plus-circle"></i> Nuevo pago
+        </a>
+        <a href="{{ url_for('reservas.ver', id=reserva.id) }}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Volver a la reserva
+        </a>
+    </div>
+</div>
+
+<!-- Resumen económico -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card text-white bg-primary">
+            <div class="card-body">
+                <h6 class="card-title">Precio total</h6>
+                <p class="card-text display-6">{{ "%.2f"|format(reserva.precio_total) }} €</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-success">
+            <div class="card-body">
+                <h6 class="card-title">Total pagado</h6>
+                <p class="card-text display-6">{{ "%.2f"|format(total_pagado) }} €</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white {% if reserva.saldo_pendiente > 0 %}bg-warning{% else %}bg-info{% endif %}">
+            <div class="card-body">
+                <h6 class="card-title">Saldo pendiente</h6>
+                <p class="card-text display-6">{{ "%.2f"|format(reserva.saldo_pendiente) }} €</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-secondary">
+            <div class="card-body">
+                <h6 class="card-title">Estado</h6>
+                <p class="card-text">
+                    {% if reserva.saldo_pendiente <= 0 %}
+                    <span class="badge bg-success fs-5">Pagado</span>
+                    {% else %}
+                    <span class="badge bg-warning fs-5">Pendiente</span>
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Lista de pagos -->
+{% if pagos %}
+<div class="card">
+    <div class="card-header">
+        <h5>Historial de pagos</h5>
+    </div>
+    <div class="card-body">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Fecha</th>
+                    <th>Concepto</th>
+                    <th>Método</th>
+                    <th>Referencia</th>
+                    <th class="text-end">Importe</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for pago in pagos %}
+                <tr>
+                    <td>{{ pago.fecha_pago.strftime('%d/%m/%Y') }}</td>
+                    <td>{{ pago.concepto }}</td>
+                    <td>{{ pago.metodo_pago }}</td>
+                    <td>{{ pago.referencia or '-' }}</td>
+                    <td class="text-end fw-bold">{{ "%.2f"|format(pago.monto) }} €</td>
+                    <td>
+                        <form action="{{ url_for('pagos.eliminar', id=pago.id) }}" method="POST" class="d-inline">
+                            <button type="submit" class="btn btn-sm btn-danger"
+                                    onclick="return confirm('¿Eliminar este pago? Esto afectará al saldo de la reserva.')">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            <tfoot>
+                <tr class="table-primary">
+                    <th colspan="4" class="text-end">TOTAL PAGADO:</th>
+                    <th class="text-end">{{ "%.2f"|format(total_pagado) }} €</th>
+                    <th></th>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+</div>
+{% else %}
+<div class="alert alert-info">
+    <i class="bi bi-info-circle"></i> No hay pagos registrados para esta reserva.
+    <a href="{{ url_for('pagos.nuevo', reserva_id=reserva.id) }}" class="alert-link">Registrar primer pago</a>.
+</div>
+{% endif %}
+{% endblock %}

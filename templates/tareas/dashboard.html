@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1 class="mb-4">Dashboard</h1>
+
+<div class="row">
+    <div class="col-md-3 mb-3">
+        <div class="card text-white bg-primary">
+            <div class="card-body">
+                <h5 class="card-title">Propiedades</h5>
+                <p class="card-text display-6">{{ num_propiedades }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card text-white bg-success">
+            <div class="card-body">
+                <h5 class="card-title">Reservas hoy</h5>
+                <p class="card-text display-6">{{ reservas_hoy }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card text-white bg-warning">
+            <div class="card-body">
+                <h5 class="card-title">Tareas pendientes</h5>
+                <p class="card-text display-6">{{ tareas_pendientes }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card text-white bg-info">
+            <div class="card-body">
+                <h5 class="card-title">Próximas reservas</h5>
+                <p class="card-text display-6">{{ proximas_reservas|length }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<h2 class="mt-4">Próximas reservas</h2>
+{% if proximas_reservas %}
+<div class="list-group">
+    {% for r in proximas_reservas %}
+    <a href="{{ url_for('reservas.ver', id=r.id) }}" class="list-group-item list-group-item-action">
+        <div class="d-flex w-100 justify-content-between">
+            <h5 class="mb-1">{{ r.huesped_nombre }}</h5>
+            <small>{{ r.fecha_entrada }} - {{ r.fecha_salida }}</small>
+        </div>
+        <p class="mb-1">{{ r.propiedad.nombre }} · {{ r.num_huespedes }} personas</p>
+    </a>
+    {% endfor %}
+</div>
+{% else %}
+<p>No hay reservas próximas.</p>
+{% endif %}
+{% endblock %}

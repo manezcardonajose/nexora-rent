@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Informe Financiero</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 2cm;
+            color: #333;
+        }
+
+        h1 {
+            color: #2c3e50;
+            border-bottom: 3px solid #27ae60;
+            padding-bottom: 10px;
+            text-align: center;
+        }
+
+        h2 {
+            color: #2c3e50;
+            border-bottom: 1px solid #bdc3c7;
+            padding-bottom: 5px;
+            margin-top: 25px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+            font-size: 12px;
+        }
+
+        th {
+            background: #34495e;
+            color: white;
+            text-align: left;
+            padding: 8px;
+        }
+
+        td {
+            padding: 6px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .total-row {
+            background: #ecf0f1;
+            font-weight: bold;
+        }
+
+        .positivo {
+            color: #27ae60;
+            font-weight: bold;
+        }
+
+        .negativo {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+
+        .resumen-box {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 5px;
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .footer {
+            margin-top: 40px;
+            font-size: 0.8em;
+            color: #7f8c8d;
+            text-align: center;
+            border-top: 1px solid #ecf0f1;
+            padding-top: 15px;
+        }
+    </style>
+</head>
+<body>
+    <h1>INFORME FINANCIERO</h1>
+
+    <div style="text-align: right; font-size: 0.9em; margin-bottom: 20px;">
+        <strong>Fecha de generación:</strong> {{ now().strftime('%d/%m/%Y %H:%M') }}<br>
+        <strong>Período:</strong> {{ fecha_inicio.strftime('%d/%m/%Y') }} - {{ fecha_fin.strftime('%d/%m/%Y') }}
+    </div>
+
+    <!-- Resumen principal -->
+    <div class="resumen-box">
+        <h2 style="margin-top: 0;">Resumen Económico</h2>
+        <table style="width: 60%; margin: auto;">
+            <tr>
+                <th>Total Ingresos</th>
+                <td class="positivo">{{ "%.2f"|format(total_ingresos) }} €</td>
+            </tr>
+            <tr>
+                <th>Total Gastos</th>
+                <td class="negativo">{{ "%.2f"|format(total_gastos) }} €</td>
+            </tr>
+            <tr class="total-row">
+                <th>BALANCE</th>
+                <td class="{{ 'positivo' if balance >= 0 else 'negativo' }}">
+                    {{ "%.2f"|format(balance) }} €
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- Ingresos por método de pago -->
+    <h2>Ingresos por Método de Pago</h2>
+    <table style="width: 50%;">
+        <thead>
+            <tr>
+                <th>Método</th>
+                <th>Total</th>
+                <th>%</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for metodo, total in ingresos_por_metodo.items() %}
+            <tr>
+                <td>{{ metodo|capitalize }}</td>
+                <td>{{ "%.2f"|format(total) }} €</td>
+                <td>{{ "%.1f"|format(total / total_ingresos * 100) if total_ingresos > 0 else 0 }}%</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- Gastos por categoría -->
+    <h2>Gastos por Categoría</h2>
+    <table style="width: 50%;">
+        <thead>
+            <tr>
+                <th>Categoría</th>
+                <th>Total</th>
+                <th>%</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for categoria, total in gastos_por_categoria.items() %}
+            <tr>
+                <td>{{ categoria|capitalize }}</td>
+                <td>{{ "%.2f"|format(total) }} €</td>
+                <td>{{ "%.1f"|format(total / total_gastos * 100) if total_gastos > 0 else 0 }}%</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="footer">
+        <p>Informe financiero generado automáticamente</p>
+    </div>
+</body>
+</html>

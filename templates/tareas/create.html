@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Nueva Tarea</h1>
+<form method="POST">
+    {{ form.hidden_tag() }}
+    <div class="mb-3">
+        {{ form.propiedad_id.label(class="form-label") }}
+        {{ form.propiedad_id(class="form-select") }}
+    </div>
+    <div class="mb-3">
+        {{ form.reserva_id.label(class="form-label") }}
+        {{ form.reserva_id(class="form-select") }}
+    </div>
+    <div class="mb-3">
+        {{ form.titulo.label(class="form-label") }}
+        {{ form.titulo(class="form-control") }}
+    </div>
+    <div class="mb-3">
+        {{ form.descripcion.label(class="form-label") }}
+        {{ form.descripcion(class="form-control", rows=3) }}
+    </div>
+    <div class="row">
+        <div class="col-md-6 mb-3">
+            {{ form.fecha_programada.label(class="form-label") }}
+            {{ form.fecha_programada(class="form-control", type="date") }}
+        </div>
+        <div class="col-md-6 mb-3">
+            {{ form.tipo.label(class="form-label") }}
+            {{ form.tipo(class="form-select") }}
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-6 mb-3">
+            {{ form.asignado_a.label(class="form-label") }}
+            {{ form.asignado_a(class="form-select") }}
+        </div>
+        <div class="col-md-6 mb-3 form-check">
+            {{ form.completada(class="form-check-input") }}
+            {{ form.completada.label(class="form-check-label") }}
+        </div>
+    </div>
+    <button type="submit" class="btn btn-primary">Guardar</button>
+    <a href="{{ url_for('listar_tareas') }}" class="btn btn-secondary">Cancelar</a>
+</form>
+{% endblock %}

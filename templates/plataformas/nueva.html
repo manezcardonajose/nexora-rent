@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h4 class="mb-0"><i class="bi bi-cloud-plus"></i> Conectar nueva plataforma</h4>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i>
+                    Conecta tus cuentas de Airbnb, Booking.com, etc. para sincronizar automáticamente las reservas.
+                </div>
+
+                <form method="POST" action="">
+                    {{ form.hidden_tag() }}
+
+                    <div class="mb-3">
+                        {{ form.nombre.label(class="form-label") }}
+                        {{ form.nombre(class="form-select") }}
+                    </div>
+
+                    <div class="mb-3">
+                        {{ form.nombre_personalizado.label(class="form-label") }}
+                        {{ form.nombre_personalizado(class="form-control", placeholder="Ej: Airbnb Mallorca, Booking Madrid...") }}
+                        <small class="text-muted">Opcional, para identificar fácilmente la cuenta</small>
+                    </div>
+
+                    <div class="mb-3">
+                        {{ form.email_cuenta.label(class="form-label") }}
+                        {{ form.email_cuenta(class="form-control", type="email", placeholder="email@ejemplo.com") }}
+                        <small class="text-muted">El email asociado a la cuenta (opcional)</small>
+                    </div>
+
+                    <div class="alert alert-warning small">
+                        <i class="bi bi-exclamation-triangle"></i>
+                        Después de conectar la plataforma, deberás añadir los calendarios iCal de cada propiedad desde la sección "Ver calendarios".
+                    </div>
+
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for('plataformas.index') }}" class="btn btn-secondary me-md-2">
+                            <i class="bi bi-x-circle"></i> Cancelar
+                        </a>
+                        <button type="submit" class="btn btn-success">
+                            <i class="bi bi-check-circle"></i> Conectar
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

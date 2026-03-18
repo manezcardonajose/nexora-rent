@@ -1,0 +1,289 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-10">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0"><i class="bi bi-calendar-plus"></i> Nueva reserva</h4>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="" id="reservaForm">
+                    {{ form.hidden_tag() }}
+
+                    <!-- DATOS DE LA RESERVA -->
+                    <div class="card mb-3">
+                        <div class="card-header bg-secondary text-white">
+                            <h5 class="mb-0"><i class="bi bi-house"></i> Datos de la reserva</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    {{ form.propiedad_id.label(class="form-label") }}
+                                    {{ form.propiedad_id(class="form-select", id="propiedad_id") }}
+                                    {% for error in form.propiedad_id.errors %}
+                                    <span class="text-danger">{{ error }}</span>
+                                    {% endfor %}
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    {{ form.origen.label(class="form-label") }}
+                                    {{ form.origen(class="form-select") }}
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    {{ form.fecha_entrada.label(class="form-label") }}
+                                    {{ form.fecha_entrada(class="form-control", type="date", id="fecha_entrada") }}
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    {{ form.fecha_salida.label(class="form-label") }}
+                                    {{ form.fecha_salida(class="form-control", type="date", id="fecha_salida") }}
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    {{ form.estado.label(class="form-label") }}
+                                    {{ form.estado(class="form-select") }}
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    {{ form.num_huespedes.label(class="form-label") }}
+                                    {{ form.num_huespedes(class="form-control", type="number", min="1", id="num_huespedes") }}
+                                    <small class="text-muted">Número total de viajeros</small>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    {{ form.num_menores.label(class="form-label") }}
+                                    {{ form.num_menores(class="form-control", type="number", min="0") }}
+                                    <small class="text-muted">Menores de 14 años</small>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    {{ form.relacion_parentesco.label(class="form-label") }}
+                                    {{ form.relacion_parentesco(class="form-control", placeholder="Ej: Familia, amigos, pareja") }}
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                {{ form.external_id.label(class="form-label") }}
+                                {{ form.external_id(class="form-control", placeholder="ID de Airbnb/Booking si aplica") }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- NOTA IMPORTANTE SOBRE HUÉSPEDES -->
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i>
+                        <strong>Importante:</strong> Después de crear la reserva, deberás registrar los datos de cada huésped individualmente
+                        (obligatorio según SES.HOSPEDAJES). El número de huéspedes indicado determinará cuántos registros necesitas.
+                    </div>
+
+                    <!-- SELECCIÓN DE HABITACIONES -->
+                    <div class="card mb-3">
+                        <div class="card-header bg-info text-white">
+                            <h5 class="mb-0"><i class="bi bi-door-open"></i> Selección de habitaciones</h5>
+                        </div>
+                        <div class="card-body">
+                            <div id="habitaciones-container" class="mb-3">
+                                <div class="alert alert-info">
+                                    <i class="bi bi-info-circle"></i> Selecciona una propiedad para ver sus habitaciones disponibles.
+                                </div>
+                            </div>
+
+                            <!-- Resumen de precios -->
+                            <div class="row mt-3 d-none" id="resumen-precios">
+                                <div class="col-md-6">
+                                    <div class="alert alert-success">
+                                        <strong>Subtotal habitaciones:</strong> <span id="subtotal-habitaciones">0</span> €
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="alert alert-info">
+                                        <strong>Precio total estimado:</strong> <span id="total-estimado">0</span> €
+                                        <br><small>(Incluye impuestos y retenciones)</small>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="alert alert-light border small">
+                                <i class="bi bi-info-circle"></i> Precios por noche SIN impuestos. El cálculo final incluirá impuestos y retenciones según la configuración de la propiedad.
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- NOTAS -->
+                    <div class="card mb-3">
+                        <div class="card-header bg-secondary text-white">
+                            <h5 class="mb-0"><i class="bi bi-chat"></i> Notas adicionales</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                {{ form.notas.label(class="form-label") }}
+                                {{ form.notas(class="form-control", rows=3) }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- BOTONES -->
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for('reservas.index') }}" class="btn btn-secondary me-md-2">
+                            <i class="bi bi-x-circle"></i> Cancelar
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle"></i> Crear reserva
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const propiedadSelect = document.getElementById('propiedad_id');
+        const container = document.getElementById('habitaciones-container');
+        const resumenPrecios = document.getElementById('resumen-precios');
+        const subtotalSpan = document.getElementById('subtotal-habitaciones');
+        const totalEstimadoSpan = document.getElementById('total-estimado');
+        const fechaEntrada = document.getElementById('fecha_entrada');
+        const fechaSalida = document.getElementById('fecha_salida');
+
+        if (!propiedadSelect) {
+            console.error('❌ No se encontró el elemento propiedad_id');
+            return;
+        }
+
+        // Función para calcular noches
+        function calcularNoches() {
+            if (fechaEntrada.value && fechaSalida.value) {
+                const entrada = new Date(fechaEntrada.value);
+                const salida = new Date(fechaSalida.value);
+                const diffTime = salida - entrada;
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                return diffDays > 0 ? diffDays : 0;
+            }
+            return 0;
+        }
+
+        // Función para actualizar resumen de precios
+        function actualizarResumen() {
+            const checkboxes = document.querySelectorAll('input[name="habitaciones"]:checked');
+            const noches = calcularNoches();
+
+            let subtotal = 0;
+            checkboxes.forEach(cb => {
+                subtotal += parseFloat(cb.dataset.precio || 0);
+            });
+
+            const subtotalNoches = subtotal * noches;
+            subtotalSpan.textContent = subtotalNoches.toFixed(2);
+            totalEstimadoSpan.textContent = subtotalNoches.toFixed(2);
+
+            if (checkboxes.length > 0 && noches > 0) {
+                resumenPrecios.classList.remove('d-none');
+            } else {
+                resumenPrecios.classList.add('d-none');
+            }
+        }
+
+        // Función para seleccionar/deseleccionar todas
+        window.seleccionarTodas = function (seleccionar) {
+            const checkboxes = document.querySelectorAll('input[name="habitaciones"]');
+            checkboxes.forEach(cb => {
+                cb.checked = seleccionar;
+            });
+            actualizarResumen();
+        };
+
+        // Evento cuando cambia la propiedad
+        propiedadSelect.addEventListener('change', function () {
+            const propiedadId = this.value;
+
+            if (!propiedadId || propiedadId == 0) {
+                container.innerHTML = '<div class="alert alert-warning"><i class="bi bi-exclamation-triangle"></i> Selecciona una propiedad para ver sus habitaciones.</div>';
+                return;
+            }
+
+            container.innerHTML = '<div class="text-center"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Cargando...</span></div></div>';
+
+            fetch(`/api/habitaciones/${propiedadId}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`Error HTTP: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.length === 0) {
+                        container.innerHTML = '<div class="alert alert-warning"><i class="bi bi-exclamation-triangle"></i> No hay habitaciones activas para esta propiedad. Crea habitaciones primero.</div>';
+                        return;
+                    }
+
+                    let html = '<div class="mb-2">';
+                    html += '<button type="button" class="btn btn-sm btn-outline-primary me-1" onclick="seleccionarTodas(true)"><i class="bi bi-check-all"></i> Seleccionar todas</button>';
+                    html += '<button type="button" class="btn btn-sm btn-outline-secondary" onclick="seleccionarTodas(false)"><i class="bi bi-x"></i> Deseleccionar todas</button>';
+                    html += '</div><div class="list-group">';
+
+                    data.forEach(h => {
+                        html += `
+                        <div class="list-group-item">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="habitaciones" value="${h.id}" data-precio="${h.precio_base}" id="hab_${h.id}">
+                                <label class="form-check-label w-100" for="hab_${h.id}">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <strong>${h.nombre}</strong>
+                                            <span class="badge bg-info">${h.tipo}</span>
+                                            ${h.tiene_bano_suite ? '<span class="badge bg-success">Baño suite</span>' : ''}
+                                            <br>
+                                            <small class="text-muted">
+                                                <i class="bi bi-person"></i> ${h.capacidad} pers.
+                                                ${h.camas ? ` | <i class="bi bi-door-closed"></i> ${h.camas}` : ''}
+                                            </small>
+                                        </div>
+                                        <div class="text-end">
+                                            <span class="fw-bold text-primary">${h.precio_base} €</span>
+                                            <br>
+                                            <small class="text-muted">/noche</small>
+                                        </div>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+                    `;
+                    });
+                    html += '</div>';
+
+                    container.innerHTML = html;
+
+                    // Añadir eventos a los checkboxes
+                    document.querySelectorAll('input[name="habitaciones"]').forEach(cb => {
+                        cb.addEventListener('change', actualizarResumen);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    container.innerHTML = `<div class="alert alert-danger"><i class="bi bi-exclamation-triangle"></i> Error al cargar habitaciones: ${error.message}</div>`;
+                });
+        });
+
+        // Eventos para fechas
+        if (fechaEntrada) fechaEntrada.addEventListener('change', actualizarResumen);
+        if (fechaSalida) fechaSalida.addEventListener('change', actualizarResumen);
+    });
+</script>
+
+<style>
+    .habitacion-checkbox {
+        transform: scale(1.2);
+        margin-right: 10px;
+    }
+
+    .list-group-item:hover {
+        background-color: #f8f9fa;
+    }
+</style>
+{% endblock %}
