@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1><i class="bi bi-person-badge"></i> Detalle del huésped</h1>
+    <div>
+        <a href="{{ url_for('huespedes.editar', id=huesped.id) }}" class="btn btn-warning">
+            <i class="bi bi-pencil"></i> Editar
+        </a>
+        <a href="{{ url_for('huespedes.index', reserva_id=huesped.reserva_id) }}" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> Volver
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card mb-3">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Datos personales</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-sm">
+                    <tr><th>Nombre:</th><td>{{ huesped.nombre }} {{ huesped.apellidos }}</td></tr>
+                    <tr><th>Sexo:</th><td>{{ huesped.sexo }}</td></tr>
+                    <tr><th>Fecha nacimiento:</th><td>{{ huesped.fecha_nacimiento }}</td></tr>
+                    <tr><th>Nacionalidad:</th><td>{{ huesped.nacionalidad }}</td></tr>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card mb-3">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">Documento de identidad</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-sm">
+                    <tr><th>Tipo:</th><td>{{ huesped.tipo_documento }}</td></tr>
+                    <tr><th>Número:</th><td>{{ huesped.numero_documento }}</td></tr>
+                    {% if huesped.numero_soporte %}
+                    <tr><th>Nº soporte:</th><td>{{ huesped.numero_soporte }}</td></tr>
+                    {% endif %}
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card mb-3">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">Domicilio</h5>
+            </div>
+            <div class="card-body">
+                <p>{{ huesped.domicilio or 'No especificado' }}</p>
+                <p>{{ huesped.ciudad or '' }} {{ huesped.codigo_postal or '' }}</p>
+                <p>{{ huesped.pais or '' }}</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card mb-3">
+            <div class="card-header bg-warning text-dark">
+                <h5 class="mb-0">Contacto</h5>
+            </div>
+            <div class="card-body">
+                <p><strong>Teléfono:</strong> {{ huesped.telefono or 'No especificado' }}</p>
+                <p><strong>Email:</strong> {{ huesped.email or 'No especificado' }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

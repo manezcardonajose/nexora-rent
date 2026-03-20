@@ -82,7 +82,7 @@
 </head>
 <body>
     <h1>DOCUMENTO DE RESERVA</h1>
-    
+
     <div style="text-align: right; font-size: 0.9em; margin-bottom: 20px;">
         <strong>Nº de reserva:</strong> {{ reserva.id }}<br>
         <strong>Fecha de emisión:</strong> {{ now().strftime('%d/%m/%Y %H:%M') }}
@@ -127,12 +127,13 @@
     {% endif %}
 
     <!-- RESUMEN ECONÓMICO -->
+    <!-- RESUMEN ECONÓMICO -->
     <h2>4. RESUMEN ECONÓMICO</h2>
     <table>
         <tr><th>Subtotal habitaciones:</th><td class="text-end">{{ "%.2f"|format(reserva.subtotal_habitaciones) }} €</td></tr>
         <tr><th>Impuestos ({{ reserva.propiedad.porcentaje_impuesto }}% {{ reserva.propiedad.tipo_impuesto }}):</th><td class="text-end">{{ "%.2f"|format(reserva.total_impuestos) }} €</td></tr>
-        {% if reserva.total_retencion > 0 %}
-        <tr><th>Retención ({{ reserva.propiedad.porcentaje_retencion }}%):</th><td class="text-end">-{{ "%.2f"|format(reserva.total_retencion) }} €</td></tr>
+        {% if reserva.retencion_total > 0 %}  <!-- 🔴 CORREGIDO -->
+        <tr><th>Retención ({{ reserva.propiedad.porcentaje_retencion }}%):</th><td class="text-end">-{{ "%.2f"|format(reserva.retencion_total) }} €</td></tr>  <!-- 🔴 CORREGIDO -->
         {% endif %}
         <tr style="font-size: 1.2em; background-color: #ecf0f1;">
             <th>TOTAL RESERVA:</th>
@@ -143,7 +144,7 @@
     <!-- ESTADO DE PAGOS -->
     <h2>5. ESTADO DE PAGOS</h2>
     {% set pagos = reserva.pagos.all() %}
-    
+
     <div class="info-box">
         <table style="margin: 0;">
             <tr>

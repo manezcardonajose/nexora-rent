@@ -145,3 +145,17 @@ def eliminar(id):
     db.session.commit()
     flash('Huésped eliminado correctamente', 'success')
     return redirect(url_for('huespedes.index', reserva_id=reserva.id))
+
+@huespedes_bp.route('/ver/<int:id>')
+@login_required
+def ver(id):
+    """Ver detalle de un huésped"""
+    huesped = Huesped.query.get_or_404(id)
+    reserva = Reserva.query.get(huesped.reserva_id)
+    propiedad = Propiedad.query.get(reserva.propiedad_id)
+    
+    if propiedad.usuario_id != current_user.id:
+        flash('No autorizado', 'danger')
+        return redirect(url_for('reservas.index'))
+    
+    return render_template('huespedes/ver.html', huesped=huesped)

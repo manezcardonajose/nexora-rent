@@ -1,0 +1,2 @@
+SECRET_KEY=clave-super-secreta-cambiar-en-produccion
+DATABASE_URL=sqlite:///app.db

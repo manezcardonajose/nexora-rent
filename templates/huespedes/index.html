@@ -37,7 +37,7 @@
 <!-- Lista de huéspedes -->
 {% if reserva.huespedes.count() > 0 %}
 <div class="row">
-    {% for h in reserva.huespedes %}
+    {% for huesped in reserva.huespedes %}  <!-- 🔴 Cambiado: h → huesped -->
     <div class="col-md-6 mb-3">
         <div class="card {% if loop.first %}border-primary{% endif %}">
             <div class="card-header d-flex justify-content-between align-items-center">
@@ -49,10 +49,14 @@
                     {% endif %}
                 </h5>
                 <div>
-                    <a href="{{ url_for('huespedes.editar', id=h.id) }}" class="btn btn-sm btn-warning">
+                    <!-- 🔴 Corregido: huesped en lugar de h -->
+                    <a href="{{ url_for('huespedes.ver', id=huesped.id) }}" class="btn btn-sm btn-info">
+                        <i class="bi bi-eye"></i>
+                    </a>
+                    <a href="{{ url_for('huespedes.editar', id=huesped.id) }}" class="btn btn-sm btn-warning">
                         <i class="bi bi-pencil"></i>
                     </a>
-                    <form action="{{ url_for('huespedes.eliminar', id=h.id) }}" method="POST" class="d-inline">
+                    <form action="{{ url_for('huespedes.eliminar', id=huesped.id) }}" method="POST" class="d-inline">
                         <button type="submit" class="btn btn-sm btn-danger"
                                 onclick="return confirm('¿Eliminar este huésped?')">
                             <i class="bi bi-trash"></i>
@@ -63,18 +67,18 @@
             <div class="card-body">
                 <div class="row">
                     <div class="col-6">
-                        <strong>Nombre:</strong> {{ h.nombre }} {{ h.apellidos }}<br>
-                        <strong>Nacimiento:</strong> {{ h.fecha_nacimiento }}<br>
-                        <strong>Nacionalidad:</strong> {{ h.nacionalidad }}<br>
-                        <strong>Sexo:</strong> {{ h.sexo }}
+                        <strong>Nombre:</strong> {{ huesped.nombre }} {{ huesped.apellidos }}<br>
+                        <strong>Nacimiento:</strong> {{ huesped.fecha_nacimiento }}<br>
+                        <strong>Nacionalidad:</strong> {{ huesped.nacionalidad }}<br>
+                        <strong>Sexo:</strong> {{ huesped.sexo }}
                     </div>
                     <div class="col-6">
-                        <strong>Documento:</strong> {{ h.tipo_documento }} {{ h.numero_documento }}<br>
-                        {% if h.numero_soporte %}
-                        <strong>Soporte:</strong> {{ h.numero_soporte }}<br>
+                        <strong>Documento:</strong> {{ huesped.tipo_documento }} {{ huesped.numero_documento }}<br>
+                        {% if huesped.numero_soporte %}
+                        <strong>Soporte:</strong> {{ huesped.numero_soporte }}<br>
                         {% endif %}
-                        <strong>Email:</strong> {{ h.email or 'No' }}<br>
-                        <strong>Teléfono:</strong> {{ h.telefono or 'No' }}
+                        <strong>Email:</strong> {{ huesped.email or 'No' }}<br>
+                        <strong>Teléfono:</strong> {{ huesped.telefono or 'No' }}
                     </div>
                 </div>
             </div>
@@ -83,4 +87,4 @@
     {% endfor %}
 </div>
 {% endif %}
-{% endblock %}
+{% endblock %}py

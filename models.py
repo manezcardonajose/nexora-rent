@@ -5,6 +5,9 @@ from werkzeug.security import generate_password_hash, check_password_hash
 
 db = SQLAlchemy()
 
+# ============================================
+# MODELO USUARIO
+# ============================================
 class User(UserMixin, db.Model):
     __tablename__ = 'users'
     id = db.Column(db.Integer, primary_key=True)
@@ -16,22 +19,36 @@ class User(UserMixin, db.Model):
     fecha_registro = db.Column(db.DateTime, default=datetime.utcnow)
     activo = db.Column(db.Boolean, default=True)
     
-    # Relaciones - Nombres ÚNICOS
+    # Campos para licencias/planes
+    plan = db.Column(db.String(20), default='gratis')
+    max_propiedades = db.Column(db.Integer, default=3)
+    max_reservas = db.Column(db.Integer, default=50)
+    licencia_expiracion = db.Column(db.Date, nullable=True)
+    
+    # Relaciones
     propiedades = db.relationship('Propiedad', back_populates='propietario', lazy='dynamic')
     tareas_asignadas = db.relationship('Tarea', back_populates='asignado_a', lazy='dynamic')
-    plataformas_usuario = db.relationship('PlataformaReserva', back_populates='usuario', lazy='dynamic')  # Cambiado a 'plataformas_usuario'
-    bloqueos_creados = db.relationship('BloqueoPropiedad', back_populates='usuario_creador', lazy='dynamic')  # Nueva relación
+    plataformas_usuario = db.relationship('PlataformaReserva', back_populates='usuario', lazy='dynamic')
+    bloqueos_creados = db.relationship('BloqueoPropiedad', back_populates='usuario_creador', lazy='dynamic')
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
 
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
+    
+    def tiene_licencia_activa(self):
+        if not self.licencia_expiracion:
+            return True  # Licencia ilimitada
+        return self.licencia_expiracion >= datetime.now().date()
 
     def __repr__(self):
         return f'<User {self.username}>'
 
 
+# ============================================
+# MODELO PROPIEDAD
+# ============================================
 class Propiedad(db.Model):
     __tablename__ = 'propiedades'
     id = db.Column(db.Integer, primary_key=True)
@@ -56,7 +73,13 @@ class Propiedad(db.Model):
     aplicar_retencion = db.Column(db.Boolean, default=False)
     porcentaje_retencion = db.Column(db.Float, default=0.0)
     
-    # Relaciones - Nombres ÚNICOS y consistentes
+    # Campos para SES.Hospedajes
+    codigo_ses = db.Column(db.String(50))  # Código de establecimiento
+    codigo_arrendador = db.Column(db.String(50))  # Código de arrendador
+    usuario_ses = db.Column(db.String(50))  # Usuario WS
+    password_ses = db.Column(db.String(50))  # Contraseña WS
+    
+    # Relaciones
     propietario = db.relationship('User', back_populates='propiedades')
     reservas = db.relationship('Reserva', back_populates='propiedad', lazy='dynamic', cascade='all, delete-orphan')
     tareas = db.relationship('Tarea', back_populates='propiedad_rel', lazy='dynamic', cascade='all, delete-orphan')
@@ -70,6 +93,9 @@ class Propiedad(db.Model):
         return f'<Propiedad {self.nombre}>'
 
 
+# ============================================
+# MODELO HABITACION
+# ============================================
 class Habitacion(db.Model):
     __tablename__ = 'habitaciones'
     id = db.Column(db.Integer, primary_key=True)
@@ -94,18 +120,18 @@ class Habitacion(db.Model):
         return f'<Habitacion {self.nombre}>'
 
 
+# ============================================
+# MODELO RESERVA
+# ============================================
 class Reserva(db.Model):
     __tablename__ = 'reservas'
     id = db.Column(db.Integer, primary_key=True)
     propiedad_id = db.Column(db.Integer, db.ForeignKey('propiedades.id'), nullable=False)
     
-    # Ya NO hay campos individuales del huésped principal aquí
-    # Los huéspedes se gestionan en la tabla 'huespedes'
-    
     # 📊 DATOS DEL GRUPO
-    num_huespedes = db.Column(db.Integer, default=1)          # Número total de viajeros
-    num_menores = db.Column(db.Integer, default=0)            # Menores de 14 años
-    relacion_parentesco = db.Column(db.String(200), nullable=True)  # Relación entre viajeros
+    num_huespedes = db.Column(db.Integer, default=1)
+    num_menores = db.Column(db.Integer, default=0)
+    relacion_parentesco = db.Column(db.String(200), nullable=True)
     
     # 📅 FECHAS
     fecha_entrada = db.Column(db.Date, nullable=False)
@@ -116,7 +142,7 @@ class Reserva(db.Model):
     impuesto_aplicado = db.Column(db.Float, default=0)
     total_impuestos = db.Column(db.Float, default=0)
     retencion_aplicada = db.Column(db.Float, default=0)
-    total_retencion = db.Column(db.Float, default=0)
+    retencion_total = db.Column(db.Float, default=0)  # Nota: en tu error aparece 'retención_total'
     precio_total = db.Column(db.Float)
     
     # 💵 PAGOS
@@ -129,10 +155,7 @@ class Reserva(db.Model):
     notas = db.Column(db.Text)
     fecha_creacion = db.Column(db.DateTime, default=datetime.utcnow)
     origen = db.Column(db.String(50), default='manual')
-   
-    # ... otros campos ...
-    external_id = db.Column(db.String(100), unique=True, nullable=True)  # nullable=True
-    # ...
+    external_id = db.Column(db.String(100), unique=True, nullable=True)
     
     # 🔗 RELACIONES
     propiedad = db.relationship('Propiedad', back_populates='reservas')
@@ -140,8 +163,6 @@ class Reserva(db.Model):
     habitaciones_asignadas = db.relationship('ReservaHabitacion', back_populates='reserva', lazy='dynamic', cascade='all, delete-orphan')
     pagos = db.relationship('PagoReserva', back_populates='reserva', lazy='dynamic', cascade='all, delete-orphan')
     ingresos = db.relationship('Ingreso', back_populates='reserva', lazy='dynamic')
-    
-    # 🆕 NUEVA RELACIÓN: Múltiples huéspedes
     huespedes = db.relationship('Huesped', back_populates='reserva', lazy='dynamic', cascade='all, delete-orphan')
 
     def calcular_totales(self):
@@ -152,30 +173,31 @@ class Reserva(db.Model):
         self.total_impuestos = self.subtotal_habitaciones * (self.propiedad.porcentaje_impuesto / 100)
         
         if self.propiedad.aplicar_retencion:
-            self.total_retencion = self.subtotal_habitaciones * (self.propiedad.porcentaje_retencion / 100)
+            self.retencion_total = self.subtotal_habitaciones * (self.propiedad.porcentaje_retencion / 100)
         else:
-            self.total_retencion = 0
+            self.retencion_total = 0
         
-        self.precio_total = self.subtotal_habitaciones + self.total_impuestos - self.total_retencion
+        self.precio_total = self.subtotal_habitaciones + self.total_impuestos - self.retencion_total
         self.saldo_pendiente = self.precio_total - self.deposito_pagado
         
         return self.precio_total
 
     def __repr__(self):
-        # Mostrar el primer huésped como referencia
         primer_huesped = self.huespedes.first()
         if primer_huesped:
-            return f'<Reserva {self.id} - {primer_huesped.nombre} {primer_huesped.apellidos} ({self.huespedes.count()} huespedes)>'
-        else:
-            return f'<Reserva {self.id} - Sin huéspedes>'
+            return f'<Reserva {self.id} - {primer_huesped.nombre} {primer_huesped.apellidos}>'
+        return f'<Reserva {self.id}>'
 
+
+# ============================================
+# MODELO HUÉSPED
+# ============================================
 class Huesped(db.Model):
-    """Modelo para cada huésped individual en una reserva"""
     __tablename__ = 'huespedes'
     id = db.Column(db.Integer, primary_key=True)
     reserva_id = db.Column(db.Integer, db.ForeignKey('reservas.id'), nullable=False)
     
-    # Datos personales
+    # Datos personales (obligatorios SES)
     nombre = db.Column(db.String(100), nullable=False)
     apellidos = db.Column(db.String(100), nullable=False)
     sexo = db.Column(db.String(10), nullable=False)
@@ -183,17 +205,17 @@ class Huesped(db.Model):
     nacionalidad = db.Column(db.String(50), nullable=False)
     
     # Documento de identidad
-    tipo_documento = db.Column(db.String(20), nullable=False)
+    tipo_documento = db.Column(db.String(20), nullable=False)  # DNI, NIE, Pasaporte
     numero_documento = db.Column(db.String(20), nullable=False)
-    numero_soporte = db.Column(db.String(20), nullable=True)
+    numero_soporte = db.Column(db.String(20), nullable=True)   # IDESP/TIE (para DNI/NIE)
     
-    # Domicilio habitual (opcional si es el mismo que el titular)
+    # Domicilio habitual
     domicilio = db.Column(db.String(200))
     ciudad = db.Column(db.String(100))
     codigo_postal = db.Column(db.String(20))
     pais = db.Column(db.String(50))
     
-    # Contacto (opcional)
+    # Contacto
     telefono = db.Column(db.String(20))
     email = db.Column(db.String(120))
     
@@ -204,6 +226,9 @@ class Huesped(db.Model):
         return f'<Huesped {self.nombre} {self.apellidos}>'
 
 
+# ============================================
+# MODELO RESERVA-HABITACION (ASIGNACIÓN)
+# ============================================
 class ReservaHabitacion(db.Model):
     __tablename__ = 'reserva_habitaciones'
     id = db.Column(db.Integer, primary_key=True)
@@ -220,6 +245,9 @@ class ReservaHabitacion(db.Model):
         return f'<ReservaHabitacion {self.id}>'
 
 
+# ============================================
+# MODELO PAGO RESERVA
+# ============================================
 class PagoReserva(db.Model):
     __tablename__ = 'pagos_reserva'
     id = db.Column(db.Integer, primary_key=True)
@@ -235,12 +263,15 @@ class PagoReserva(db.Model):
     
     # Relaciones
     reserva = db.relationship('Reserva', back_populates='pagos')
-    ingreso = db.relationship('Ingreso', back_populates='pago_asociado')
+    ingreso = db.relationship('Ingreso', back_populates='pago_asociado', uselist=False)
     
     def __repr__(self):
         return f'<PagoReserva {self.monto}€>'
 
 
+# ============================================
+# MODELO TAREA
+# ============================================
 class Tarea(db.Model):
     __tablename__ = 'tareas'
     id = db.Column(db.Integer, primary_key=True)
@@ -265,6 +296,9 @@ class Tarea(db.Model):
         return f'<Tarea {self.id} - {self.tipo}>'
 
 
+# ============================================
+# MODELO INGRESO
+# ============================================
 class Ingreso(db.Model):
     __tablename__ = 'ingresos'
     id = db.Column(db.Integer, primary_key=True)
@@ -284,6 +318,9 @@ class Ingreso(db.Model):
     pago_asociado = db.relationship('PagoReserva', back_populates='ingreso', uselist=False)
 
 
+# ============================================
+# MODELO GASTO
+# ============================================
 class Gasto(db.Model):
     __tablename__ = 'gastos'
     id = db.Column(db.Integer, primary_key=True)
@@ -303,6 +340,9 @@ class Gasto(db.Model):
     propiedad = db.relationship('Propiedad', back_populates='gastos')
 
 
+# ============================================
+# MODELO BLOQUEO PROPIEDAD
+# ============================================
 class BloqueoPropiedad(db.Model):
     __tablename__ = 'bloqueos'
     id = db.Column(db.Integer, primary_key=True)
@@ -325,17 +365,20 @@ class BloqueoPropiedad(db.Model):
         return f'<Bloqueo {self.id} - {self.motivo}>'
 
 
+# ============================================
+# MODELO PLATAFORMA RESERVA
+# ============================================
 class PlataformaReserva(db.Model):
     __tablename__ = 'plataformas'
     id = db.Column(db.Integer, primary_key=True)
     usuario_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    nombre = db.Column(db.String(50), nullable=False)
+    nombre = db.Column(db.String(50), nullable=False)  # airbnb, booking, etc.
     nombre_personalizado = db.Column(db.String(100))
     email_cuenta = db.Column(db.String(120))
     activa = db.Column(db.Boolean, default=True)
     fecha_conexion = db.Column(db.DateTime, default=datetime.utcnow)
     
-    # Relaciones - Nombres ÚNICOS
+    # Relaciones
     usuario = db.relationship('User', back_populates='plataformas_usuario')
     calendarios_plataforma = db.relationship('CalendarioIcal', back_populates='plataforma', lazy='dynamic')
     
@@ -343,6 +386,9 @@ class PlataformaReserva(db.Model):
         return f'<Plataforma {self.nombre_personalizado or self.nombre}>'
 
 
+# ============================================
+# MODELO CALENDARIO ICAL
+# ============================================
 class CalendarioIcal(db.Model):
     __tablename__ = 'calendarios_ical'
     id = db.Column(db.Integer, primary_key=True)
@@ -355,7 +401,7 @@ class CalendarioIcal(db.Model):
     activo = db.Column(db.Boolean, default=True)
     fecha_creacion = db.Column(db.DateTime, default=datetime.utcnow)
     
-    # Relaciones - Nombres ÚNICOS
+    # Relaciones
     propiedad = db.relationship('Propiedad', back_populates='calendarios_ical')
     plataforma = db.relationship('PlataformaReserva', back_populates='calendarios_plataforma')
     

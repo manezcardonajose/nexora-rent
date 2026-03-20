@@ -1,65 +1,321 @@
-<h3>🛏️ Habitaciones asignadas</h3>
-<table class="table table-sm">
-    <thead>
-        <tr>
-            <th>Habitación</th>
-            <th>Tipo</th>
-            <th>Precio/noche</th>
-            <th>Total {{ noches }} noches</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for rh in reserva.habitaciones_asignadas %}
-        <tr>
-            <td>{{ rh.habitacion.nombre }}</td>
-            <td>{{ rh.habitacion.tipo }} {% if rh.habitacion.tiene_bano_suite %}<span class="badge bg-success">Suite</span>{% endif %}</td>
-            <td>{{ rh.precio_aplicado }} €</td>
-            <td>{{ rh.precio_aplicado * noches }} €</td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
+{% extends "base.html" %}
 
-<h4>💰 Desglose económico</h4>
-<table class="table table-sm">
-    <tr>
-        <th>Subtotal habitaciones ({{ noches }} noches):</th>
-        <td class="text-end">{{ reserva.subtotal_habitaciones|round(2) }} €</td>
-    </tr>
-    <tr>
-        <th>Impuesto ({{ reserva.propiedad.tipo_impuesto }} {{ reserva.propiedad.porcentaje_impuesto }}%):</th>
-        <td class="text-end">+ {{ reserva.total_impuestos|round(2) }} €</td>
-    </tr>
-    {% if reserva.propiedad.aplicar_retencion %}
-    <tr>
-        <th>Retención ({{ reserva.propiedad.porcentaje_retencion }}%):</th>
-        <td class="text-end">- {{ reserva.total_retencion|round(2) }} €</td>
-    </tr>
-    {% endif %}
-    <tr class="table-primary fw-bold">
-        <th>TOTAL:</th>
-        <td class="text-end">{{ reserva.precio_total|round(2) }} €</td>
-    </tr>
-
-    <<div class="btn-group mb-3">
-    <a href="{{ url_for('reservas.editar', id=reserva.id) }}" class="btn btn-warning">
-        <i class="bi bi-pencil"></i> Editar
-    </a>
-    <a href="{{ url_for('huespedes.index', reserva_id=reserva.id) }}" class="btn btn-info">
-        <i class="bi bi-people"></i> Huéspedes ({{ reserva.huespedes.count() }}/{{ reserva.num_huespedes }})
-    </a>
-    <a href="{{ url_for('pagos.index', reserva_id=reserva.id) }}" class="btn btn-success">
-        <i class="bi bi-cash-coin"></i> Pagos ({{ reserva.pagos.count() }})
-    </a>
-    <a href="{{ url_for('reservas.pdf_reserva', id=reserva.id) }}" class="btn btn-primary">
-        <i class="bi bi-file-pdf"></i> PDF
-    </a>
-    <a href="{{ url_for('reservas.whatsapp_reserva', id=reserva.id) }}" class="btn btn-success">
-        <i class="bi bi-whatsapp"></i> WhatsApp
-    </a>
-    <a href="{{ url_for('reservas.index') }}" class="btn btn-secondary">
-        <i class="bi bi-arrow-left"></i> Volver
-    </a>
-</div>
+{% block content %}
+<div class="container">
+    <!-- Cabecera con título y estado -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h2">
+            <i class="bi bi-calendar-check text-primary"></i>
+            Reserva #{{ reserva.id }}
+            <small class="text-muted fs-5">· {{ reserva.propiedad.nombre }}</small>
+        </h1>
+        <span class="badge fs-6 p-3
+            {% if reserva.estado == 'confirmada' %}bg-success
+            {% elif reserva.estado == 'pendiente' %}bg-warning text-dark
+            {% elif reserva.estado == 'cancelada' %}bg-danger
+            {% else %}bg-secondary{% endif %}">
+            <i class="bi
+                {% if reserva.estado == 'confirmada' %}bi-check-circle
+                {% elif reserva.estado == 'pendiente' %}bi-clock-history
+                {% elif reserva.estado == 'cancelada' %}bi-x-circle
+                {% else %}bi-question-circle{% endif %} me-1"></i>
+            {{ reserva.estado|upper }}
+        </span>
     </div>
-</table>
+
+    <!-- TARJETAS DE ACCIONES (Opción 3) -->
+    <div class="row row-cols-1 row-cols-md-4 g-3 mb-5">
+        <!-- Tarjeta 1: Editar -->
+        <div class="col">
+            <div class="card h-100 text-center shadow-sm border-0 hover-effect">
+                <div class="card-body d-flex flex-column align-items-center py-4">
+                    <div class="rounded-circle bg-warning bg-opacity-10 p-3 mb-3">
+                        <i class="bi bi-pencil-square text-warning fs-1"></i>
+                    </div>
+                    <h5 class="fw-bold mb-1">Editar reserva</h5>
+                    <p class="small text-muted mb-3">Modifica fechas, estado o notas</p>
+                    <a href="{{ url_for('reservas.editar', id=reserva.id) }}" class="btn btn-warning mt-auto px-4">
+                        <i class="bi bi-pencil me-1"></i> Editar
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tarjeta 2: Huéspedes -->
+        <div class="col">
+            <div class="card h-100 text-center shadow-sm border-0 hover-effect">
+                <div class="card-body d-flex flex-column align-items-center py-4">
+                    <div class="rounded-circle bg-info bg-opacity-10 p-3 mb-3">
+                        <i class="bi bi-people text-info fs-1"></i>
+                    </div>
+                    <h5 class="fw-bold mb-1">Huéspedes</h5>
+                    <p class="small text-muted mb-3">{{ reserva.huespedes.count() }}/{{ reserva.num_huespedes }} registrados</p>
+                    <div class="d-flex gap-2 mt-auto">
+                        <a href="{{ url_for('huespedes.index', reserva_id=reserva.id) }}" class="btn btn-info text-white px-3">
+                            <i class="bi bi-people me-1"></i> Gestionar
+                        </a>
+                        {% if reserva.huespedes.count() < reserva.num_huespedes %}
+                        <a href="{{ url_for('huespedes.nuevo', reserva_id=reserva.id) }}" class="btn btn-outline-info">
+                            <i class="bi bi-plus-circle"></i>
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tarjeta 3: Pagos -->
+        <div class="col">
+            <div class="card h-100 text-center shadow-sm border-0 hover-effect">
+                <div class="card-body d-flex flex-column align-items-center py-4">
+                    <div class="rounded-circle bg-success bg-opacity-10 p-3 mb-3">
+                        <i class="bi bi-cash-coin text-success fs-1"></i>
+                    </div>
+                    <h5 class="fw-bold mb-1">Pagos</h5>
+                    <p class="small text-muted mb-3">{{ reserva.pagos.count() }} pagos · {{ "%.2f"|format(reserva.deposito_pagado) }}€</p>
+                    <div class="d-flex gap-2 mt-auto">
+                        <a href="{{ url_for('pagos.index', reserva_id=reserva.id) }}" class="btn btn-success px-3">
+                            <i class="bi bi-cash-coin me-1"></i> Ver pagos
+                        </a>
+                        <a href="{{ url_for('pagos.nuevo', reserva_id=reserva.id) }}" class="btn btn-outline-success">
+                            <i class="bi bi-plus-circle"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tarjeta 4: Documentos -->
+        <div class="col">
+            <div class="card h-100 text-center shadow-sm border-0 hover-effect">
+                <div class="card-body d-flex flex-column align-items-center py-4">
+                    <div class="rounded-circle bg-primary bg-opacity-10 p-3 mb-3">
+                        <i class="bi bi-file-earmark-pdf text-primary fs-1"></i>
+                    </div>
+                    <h5 class="fw-bold mb-1">Documentación</h5>
+                    <p class="small text-muted mb-3">PDFs y archivos legales</p>
+                    <div class="d-flex flex-wrap gap-2 justify-content-center mt-auto">
+                        <div class="d-flex flex-wrap gap-2 justify-content-center mt-auto">
+                            <a href="{{ url_for('reservas.pdf_reserva', id=reserva.id) }}" class="btn btn-primary btn-sm" title="PDF de reserva">
+                                <i class="bi bi-file-pdf"></i> PDF
+                            </a>
+                            <a href="{{ url_for('reservas.registro_viajeros', id=reserva.id) }}" class="btn btn-danger btn-sm" title="Registro de viajeros (SES)">
+                                <i class="bi bi-file-earmark-text"></i> Registro
+                            </a>
+                            <a href="{{ url_for('informes.exportar_ses_xml', reserva_id=reserva.id) }}" class="btn btn-warning btn-sm text-dark" title="Exportar XML para SES.Hospedajes">
+                                <i class="bi bi-file-xml"></i> SES
+                            </a>
+                            <a href="{{ url_for('reservas.whatsapp_reserva', id=reserva.id) }}" class="btn btn-success btn-sm" title="Compartir por WhatsApp">
+                                <i class="bi bi-whatsapp"></i> WP
+                            </a>
+                            <!-- NUEVO BOTÓN DE EMAIL -->
+                            <form action="{{ url_for('reservas.enviar_email', id=reserva.id) }}" method="POST" class="d-inline">
+                                <button type="submit" class="btn btn-info btn-sm" title="Enviar PDF por email"
+                                        {% if not reserva.huespedes.first() or not reserva.huespedes.first().email %}disabled{% endif %}>
+                                    <i class="bi bi-envelope"></i> Email
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- BARRAS DE PROGRESO -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted"><i class="bi bi-people text-info me-1"></i> Registro de huéspedes</span>
+                        <span class="fw-bold">{{ reserva.huespedes.count() }}/{{ reserva.num_huespedes }}</span>
+                    </div>
+                    <div class="progress" style="height: 12px;">
+                        <div class="progress-bar bg-info progress-bar-striped"
+                             style="width: {{ (reserva.huespedes.count() / reserva.num_huespedes * 100)|round }}%"></div>
+                    </div>
+                    <small class="text-muted mt-2 d-block">
+                        {% if reserva.huespedes.count() == reserva.num_huespedes %}
+                        <i class="bi bi-check-circle-fill text-success"></i> Todos los huéspedes registrados
+                        {% else %}
+                        <i class="bi bi-exclamation-triangle-fill text-warning"></i>
+                        Faltan {{ reserva.num_huespedes - reserva.huespedes.count() }} huéspedes por registrar
+                        {% endif %}
+                    </small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted"><i class="bi bi-cash-coin text-success me-1"></i> Estado de pagos</span>
+                        <span class="fw-bold">{{ "%.2f"|format(reserva.deposito_pagado) }}€ / {{ "%.2f"|format(reserva.precio_total) }}€</span>
+                    </div>
+                    <div class="progress" style="height: 12px;">
+                        {% set porcentaje = (reserva.deposito_pagado / reserva.precio_total * 100)|round if reserva.precio_total > 0 else 0 %}
+                        <div class="progress-bar bg-success progress-bar-striped"
+                             style="width: {{ porcentaje }}%"></div>
+                    </div>
+                    <small class="text-muted mt-2 d-block">
+                        {% if reserva.saldo_pendiente <= 0 %}
+                        <i class="bi bi-check-circle-fill text-success"></i> Pagado completamente
+                        {% else %}
+                        <i class="bi bi-exclamation-triangle-fill text-warning"></i>
+                        Pendiente: {{ "%.2f"|format(reserva.saldo_pendiente) }}€
+                        {% endif %}
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- DETALLE DE LA RESERVA -->
+    <div class="row g-3">
+        <!-- Columna izquierda: Datos generales -->
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-transparent border-0 pt-3">
+                    <h5 class="mb-0"><i class="bi bi-info-circle text-primary me-2"></i>Información general</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-sm">
+                        <tr>
+                            <th width="35%" class="text-muted">Propiedad:</th>
+                            <td>
+                                <a href="{{ url_for('propiedades.ver', id=reserva.propiedad.id) }}" class="text-decoration-none">
+                                    <strong>{{ reserva.propiedad.nombre }}</strong>
+                                </a>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th class="text-muted">Fechas:</th>
+                            <td>{{ reserva.fecha_entrada.strftime('%d/%m/%Y') }} → {{ reserva.fecha_salida.strftime('%d/%m/%Y') }}</td>
+                        </tr>
+                        <tr>
+                            <th class="text-muted">Noches:</th>
+                            <td><span class="badge bg-primary">{{ noches }}</span></td>
+                        </tr>
+                        <tr>
+                            <th class="text-muted">Viajeros:</th>
+                            <td>{{ reserva.num_huespedes }} ({{ reserva.num_menores }} menores)</td>
+                        </tr>
+                        <tr>
+                            <th class="text-muted">Relación:</th>
+                            <td>{{ reserva.relacion_parentesco or 'No especificada' }}</td>
+                        </tr>
+                        <tr>
+                            <th class="text-muted">Origen:</th>
+                            <td><span class="badge bg-secondary">{{ reserva.origen|upper }}</span></td>
+                        </tr>
+                        {% if reserva.external_id %}
+                        <tr>
+                            <th class="text-muted">ID externo:</th>
+                            <td><code>{{ reserva.external_id }}</code></td>
+                        </tr>
+                        {% endif %}
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Columna derecha: Resumen económico -->
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-transparent border-0 pt-3">
+                    <h5 class="mb-0"><i class="bi bi-calculator text-success me-2"></i>Resumen económico</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-sm">
+                        <tr>
+                            <th class="text-muted">Subtotal habitaciones:</th>
+                            <td class="text-end">{{ "%.2f"|format(reserva.subtotal_habitaciones) }} €</td>
+                        </tr>
+                        <tr>
+                            <th class="text-muted">Impuestos ({{ reserva.propiedad.porcentaje_impuesto }}%):</th>
+                            <td class="text-end text-success">+ {{ "%.2f"|format(reserva.total_impuestos) }} €</td>
+                        </tr>
+                        {% if reserva.retencion_total > 0 %}
+                        <tr>
+                            <th class="text-muted">Retención ({{ reserva.propiedad.porcentaje_retencion }}%):</th>
+                            <td class="text-end text-danger">- {{ "%.2f"|format(reserva.retencion_total) }} €</td>
+                        </tr>
+                        {% endif %}
+                        <tr class="border-top">
+                            <th class="fw-bold">TOTAL:</th>
+                            <td class="text-end fw-bold fs-5">{{ "%.2f"|format(reserva.precio_total) }} €</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- NOTAS ADICIONALES -->
+    {% if reserva.notas %}
+    <div class="card border-0 shadow-sm mt-3">
+        <div class="card-body">
+            <h6 class="text-muted"><i class="bi bi-chat me-2"></i>Notas adicionales</h6>
+            <p class="mb-0">{{ reserva.notas }}</p>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- CSS personalizado para efectos hover y estilos adicionales -->
+<style>
+    .hover-effect {
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        cursor: pointer;
+    }
+
+        .hover-effect:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 1rem 2rem rgba(0,0,0,0.15) !important;
+        }
+
+    .rounded-circle {
+        transition: all 0.3s ease;
+    }
+
+    .hover-effect:hover .rounded-circle {
+        transform: scale(1.1);
+    }
+
+    .progress {
+        border-radius: 20px;
+        background-color: #e9ecef;
+    }
+
+    .progress-bar {
+        border-radius: 20px;
+        transition: width 0.5s ease;
+    }
+
+    .card {
+        border-radius: 16px !important;
+        overflow: hidden;
+    }
+
+    .card-header {
+        background: white;
+    }
+
+    .badge {
+        padding: 0.6em 1em;
+        font-weight: 500;
+    }
+
+    .btn {
+        border-radius: 10px;
+        font-weight: 500;
+        transition: all 0.2s;
+    }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 10px rgba(0,0,0,0.1);
+        }
+</style>
+{% endblock %}

@@ -303,3 +303,136 @@ def generar_pdf_informe_financiero(ingresos, gastos, total_ingresos, total_gasto
                               fecha_fin=fecha_fin,
                               error_pdf=str(e),
                               now=datetime.now)
+
+@informes_bp.route('/exportar-ses/<int:reserva_id>')
+@login_required
+def exportar_ses(reserva_id):
+    """Exportar datos en formato TXT para SES.Hospedajes"""
+    reserva = Reserva.query.get_or_404(reserva_id)
+    
+    # Formato oficial: campos separados por tabulaciones
+    # Orden según especificaciones del Ministerio [citation:1]
+    lineas = []
+    
+    for h in reserva.huespedes:
+        linea = [
+            h.nombre,
+            h.apellidos.split()[0] if len(h.apellidos.split()) > 0 else '',
+            h.apellidos.split()[1] if len(h.apellidos.split()) > 1 else '',
+            h.sexo[:1].upper(),  # H/M
+            h.fecha_nacimiento.strftime('%d%m%Y'),
+            h.tipo_documento,
+            h.numero_documento,
+            h.nacionalidad,
+            reserva.fecha_entrada.strftime('%d%m%Y'),
+            '16:00',  # Hora entrada por defecto
+            reserva.fecha_salida.strftime('%d%m%Y'),
+            '11:00',  # Hora salida por defecto
+            h.domicilio or '',
+            h.ciudad or '',
+            h.codigo_postal or '',
+            reserva.propiedad.ciudad or '',
+            h.pais or 'ES',
+            h.telefono or '',
+            h.email or '',
+            'Titular' if loop.first else 'Acompañante'
+        ]
+        lineas.append('\t'.join(str(campo) for campo in linea))
+    
+    # Crear archivo TXT
+    output = '\n'.join(lineas)
+    buffer = BytesIO(output.encode('utf-8'))
+    buffer.seek(0)
+    
+    return send_file(
+        buffer,
+        as_attachment=True,
+        download_name=f"ses_hospedajes_{reserva.id}.txt",
+        mimetype='text/plain'
+    )
+
+@informes_bp.route('/exportar-ses-xml/<int:reserva_id>')
+@login_required
+def exportar_ses_xml(reserva_id):
+    """Exportar datos en formato XML oficial para SES.Hospedajes"""
+    from xml.dom import minidom
+    from datetime import datetime
+    
+    reserva = Reserva.query.get_or_404(reserva_id)
+    
+    # Crear estructura XML
+    doc = minidom.Document()
+    
+    # Raíz
+    root = doc.createElement('ComunicacionHospedajes')
+    doc.appendChild(root)
+    
+    # Cabecera
+    cabecera = doc.createElement('Cabecera')
+    root.appendChild(cabecera)
+    
+    fecha = doc.createElement('FechaEnvio')
+    fecha.appendChild(doc.createTextNode(datetime.now().strftime('%Y-%m-%d')))
+    cabecera.appendChild(fecha)
+    
+    # Parte de viajeros
+    parte = doc.createElement('ParteViajeros')
+    root.appendChild(parte)
+    
+    # Datos de estancia
+    estancia = doc.createElement('DatosEstancia')
+    parte.appendChild(estancia)
+    
+    entrada = doc.createElement('FechaEntrada')
+    entrada.appendChild(doc.createTextNode(reserva.fecha_entrada.strftime('%Y-%m-%d')))
+    estancia.appendChild(entrada)
+    
+    salida = doc.createElement('FechaSalida')
+    salida.appendChild(doc.createTextNode(reserva.fecha_salida.strftime('%Y-%m-%d')))
+    estancia.appendChild(salida)
+    
+    # Viajeros
+    for idx, h in enumerate(reserva.huespedes):
+        viajero = doc.createElement('Viajero')
+        if idx == 0:
+            viajero.setAttribute('rol', 'TITULAR')
+        else:
+            viajero.setAttribute('rol', 'ACOMPAÑANTE')
+        parte.appendChild(viajero)
+        
+        # Campos obligatorios
+        campos = [
+            ('Nombre', h.nombre),
+            ('Apellido1', h.apellidos.split()[0] if h.apellidos else ''),
+            ('Apellido2', h.apellidos.split()[1] if len(h.apellidos.split()) > 1 else ''),
+            ('TipoDocumento', h.tipo_documento),
+            ('NumeroDocumento', h.numero_documento),
+            ('SoporteDocumento', h.numero_soporte or ''),
+            ('FechaNacimiento', h.fecha_nacimiento.strftime('%Y-%m-%d')),
+            ('Nacionalidad', h.nacionalidad),
+            ('Sexo', h.sexo[:1].upper()),
+            ('Domicilio', h.domicilio or ''),
+            ('Ciudad', h.ciudad or ''),
+            ('CodigoPostal', h.codigo_postal or ''),
+            ('Pais', h.pais or 'ES'),
+            ('Telefono', h.telefono or ''),
+            ('Email', h.email or '')
+        ]
+        
+        for tag, valor in campos:
+            elem = doc.createElement(tag)
+            elem.appendChild(doc.createTextNode(str(valor)))
+            viajero.appendChild(elem)
+    
+    # Generar XML con formato
+    xml_string = doc.toprettyxml(encoding='utf-8')
+    
+    buffer = BytesIO(xml_string)
+    buffer.seek(0)
+    
+    return send_file(
+        buffer,
+        as_attachment=True,
+        download_name=f"ses_hospedajes_{reserva.id}.xml",
+        mimetype='application/xml'
+    )

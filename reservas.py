@@ -9,39 +9,30 @@ from io import BytesIO
 # 🔴 PRIMERO: Crear el blueprint
 reservas_bp = Blueprint('reservas', __name__, url_prefix='/reservas')
 
-# ============================================
-# RUTA: LISTADO DE RESERVAS
-# ============================================
+# 🔴 DESPUÉS: Definir las rutas
 @reservas_bp.route('/')
 @login_required
 def index():
-    """Listado de reservas del usuario"""
+    """Listado de reservas"""
     propiedades = Propiedad.query.filter_by(usuario_id=current_user.id).all()
     propiedad_ids = [p.id for p in propiedades]
     reservas = Reserva.query.filter(Reserva.propiedad_id.in_(propiedad_ids)).order_by(Reserva.fecha_entrada.desc()).all()
     return render_template('reservas/index.html', reservas=reservas)
 
-
-# ============================================
-# RUTA: NUEVA RESERVA
-# ============================================
 @reservas_bp.route('/nueva', methods=['GET', 'POST'])
 @login_required
 def nueva():
-    """Crear una nueva reserva (sin datos de huésped, se añadirán después)"""
+    """Crear nueva reserva"""
     form = ReservaForm()
-    
-    # Cargar propiedades del usuario en el select
     propiedades = Propiedad.query.filter_by(usuario_id=current_user.id).all()
     form.propiedad_id.choices = [(0, '-- Selecciona una propiedad --')] + [(p.id, p.nombre) for p in propiedades]
     
     if form.validate_on_submit():
-        # Validar que se seleccionó una propiedad
+        # Validaciones
         if form.propiedad_id.data == 0:
             flash('Debes seleccionar una propiedad', 'danger')
             return render_template('reservas/nueva.html', form=form)
         
-        # Obtener habitaciones seleccionadas
         habitaciones_ids = request.form.getlist('habitaciones')
         if not habitaciones_ids:
             flash('Debes seleccionar al menos una habitación', 'danger')
@@ -62,7 +53,9 @@ def nueva():
             flash(f'Las siguientes habitaciones no están disponibles: {nombres}', 'danger')
             return render_template('reservas/nueva.html', form=form)
         
-        # Crear reserva SOLO con datos básicos
+        # Crear reserva
+        external_id = form.external_id.data if form.external_id.data else None
+        
         reserva = Reserva(
             propiedad_id=form.propiedad_id.data,
             num_huespedes=form.num_huespedes.data,
@@ -73,7 +66,7 @@ def nueva():
             estado=form.estado.data,
             notas=form.notas.data,
             origen=form.origen.data,
-            external_id=form.external_id.data,
+            external_id=external_id,
             deposito_pagado=0,
             subtotal_habitaciones=0,
             precio_total=0,
@@ -104,38 +97,29 @@ def nueva():
         
         generar_tareas_limpieza(reserva.id)
         
-        flash('Reserva creada correctamente. Ahora registra los datos de los huéspedes.', 'success')
-        return redirect(url_for('huespedes.index', reserva_id=reserva.id))
+        flash('Reserva creada correctamente', 'success')
+        return redirect(url_for('reservas.index'))
     
     return render_template('reservas/nueva.html', form=form)
 
-
-# ============================================
-# RUTA: EDITAR RESERVA
-# ============================================
 @reservas_bp.route('/editar/<int:id>', methods=['GET', 'POST'])
 @login_required
 def editar(id):
     """Editar una reserva existente"""
-    reserva = Reserva.query.get_or_404(id)  # <-- Obtienes la reserva existente
+    reserva = Reserva.query.get_or_404(id)
     propiedad = Propiedad.query.get(reserva.propiedad_id)
     
-    # Verificar permisos
     if propiedad.usuario_id != current_user.id:
-        flash('No tienes permiso para editar esta reserva', 'danger')
+        flash('No tienes permiso', 'danger')
         return redirect(url_for('reservas.index'))
     
     form = ReservaForm(obj=reserva)
-    
-    # Cargar propiedades en el select
     propiedades = Propiedad.query.filter_by(usuario_id=current_user.id).all()
-    form.propiedad_id.choices = [(0, '-- Selecciona una propiedad --')] + [(p.id, p.nombre) for p in propiedades]
+    form.propiedad_id.choices = [(0, '-- Selecciona --')] + [(p.id, p.nombre) for p in propiedades]
     
-    # Obtener IDs de habitaciones actualmente asignadas
     habitaciones_asignadas = [rh.habitacion_id for rh in reserva.habitaciones_asignadas]
     
     if form.validate_on_submit():
-        # Obtener nuevas habitaciones seleccionadas
         habitaciones_ids_str = request.form.getlist('habitaciones')
         nuevas_habitaciones = [int(id) for id in habitaciones_ids_str] if habitaciones_ids_str else []
         
@@ -143,22 +127,21 @@ def editar(id):
             flash('Debes seleccionar al menos una habitación', 'danger')
             return render_template('reservas/editar.html', form=form, reserva=reserva, habitaciones_asignadas=habitaciones_asignadas)
         
-        # Verificar disponibilidad de las nuevas habitaciones (excluyendo esta reserva)
         disponible, conflictivas = check_disponibilidad_habitaciones(
             form.propiedad_id.data,
             form.fecha_entrada.data,
             form.fecha_salida.data,
             nuevas_habitaciones,
-            reserva.id  # Excluir esta reserva
+            reserva.id
         )
         
         if not disponible:
             habitaciones_conflictivas = Habitacion.query.filter(Habitacion.id.in_(conflictivas)).all()
             nombres = ", ".join([h.nombre for h in habitaciones_conflictivas])
-            flash(f'Las siguientes habitaciones no están disponibles: {nombres}', 'danger')
+            flash(f'Habitaciones no disponibles: {nombres}', 'danger')
             return render_template('reservas/editar.html', form=form, reserva=reserva, habitaciones_asignadas=habitaciones_asignadas)
         
-        # Actualizar campos básicos
+        # Actualizar campos
         reserva.propiedad_id = form.propiedad_id.data
         reserva.num_huespedes = form.num_huespedes.data
         reserva.num_menores = form.num_menores.data or 0
@@ -168,18 +151,11 @@ def editar(id):
         reserva.estado = form.estado.data
         reserva.notas = form.notas.data
         reserva.origen = form.origen.data
+        reserva.external_id = form.external_id.data if form.external_id.data else None
         
-        # Manejar external_id (convertir '' a None)
-        if form.external_id.data:
-            reserva.external_id = form.external_id.data
-        else:
-            reserva.external_id = None
-        
-        # Actualizar habitaciones: eliminar las antiguas y añadir las nuevas
-        # Eliminar asignaciones antiguas
+        # Actualizar habitaciones
         ReservaHabitacion.query.filter_by(reserva_id=reserva.id).delete()
         
-        # Añadir nuevas asignaciones
         noches = (form.fecha_salida.data - form.fecha_entrada.data).days
         subtotal = 0
         
@@ -194,22 +170,15 @@ def editar(id):
                 db.session.add(rh)
                 subtotal += habitacion.precio_base * noches
         
-        # Recalcular totales
         reserva.subtotal_habitaciones = subtotal
         reserva.calcular_totales()
-        
         db.session.commit()
-        flash('Reserva actualizada correctamente', 'success')
+        
+        flash('Reserva actualizada', 'success')
         return redirect(url_for('reservas.index'))
     
-    return render_template('reservas/editar.html', 
-                          form=form, 
-                          reserva=reserva,  # <-- Solo pasas la variable
-                          habitaciones_asignadas=habitaciones_asignadas)
+    return render_template('reservas/editar.html', form=form, reserva=reserva, habitaciones_asignadas=habitaciones_asignadas)
 
-# ============================================
-# RUTA: ELIMINAR RESERVA
-# ============================================
 @reservas_bp.route('/eliminar/<int:id>', methods=['POST'])
 @login_required
 def eliminar(id):
@@ -217,141 +186,185 @@ def eliminar(id):
     reserva = Reserva.query.get_or_404(id)
     propiedad = Propiedad.query.get(reserva.propiedad_id)
     
-    # Verificar permisos
     if propiedad.usuario_id != current_user.id:
-        flash('No tienes permiso para eliminar esta reserva', 'danger')
+        flash('No tienes permiso', 'danger')
         return redirect(url_for('reservas.index'))
     
     db.session.delete(reserva)
     db.session.commit()
-    flash('Reserva eliminada correctamente', 'success')
+    flash('Reserva eliminada', 'success')
     return redirect(url_for('reservas.index'))
 
-
-# ============================================
-# RUTA: VER DETALLE DE RESERVA
-# ============================================
 @reservas_bp.route('/<int:id>')
 @login_required
 def ver(id):
-    """Ver detalle de una reserva"""
+    """Ver detalle de reserva"""
     reserva = Reserva.query.get_or_404(id)
     propiedad = Propiedad.query.get(reserva.propiedad_id)
     
-    # Verificar permisos
-    if propiedad.usuario_id != current_user.id:
-        flash('No tienes permiso para ver esta reserva', 'danger')
-        return redirect(url_for('reservas.index'))
-    
-    # Calcular noches
-    noches = (reserva.fecha_salida - reserva.fecha_entrada).days
-    
-    return render_template('reservas/ver.html', reserva=reserva, noches=noches)
-
-
-# ============================================
-# RUTA: GENERAR PDF DE RESERVA
-# ============================================
-@reservas_bp.route('/pdf/<int:id>')
-@login_required
-def pdf_reserva(id):
-    """Generar PDF de la reserva"""
-    import traceback
-    from io import BytesIO
-    
-    try:
-        print(f"🟢 [PDF] Ruta pdf_reserva llamada para ID: {id}")
-        
-        reserva = Reserva.query.get_or_404(id)
-        propiedad = Propiedad.query.get(reserva.propiedad_id)
-        
-        # Verificar permisos
-        if propiedad.usuario_id != current_user.id:
-            flash('No tienes permiso', 'danger')
-            return redirect(url_for('reservas.index'))
-        
-        print(f"🟢 [PDF] Permisos OK, usuario: {current_user.id}")
-        
-        pdf = generar_pdf_reserva(id)
-        
-        if not pdf:
-            print(f"🔴 [PDF] generar_pdf_reserva devolvió None")
-            flash('⚠️ No se pudo generar el PDF. Revisa la consola para más detalles.', 'warning')
-            return redirect(url_for('reservas.ver', id=id))
-        
-        buffer = BytesIO(pdf)
-        buffer.seek(0)
-        print(f"🟢 [PDF] Enviando PDF, tamaño: {len(pdf)} bytes")
-        
-        return send_file(
-            buffer,
-            as_attachment=True,
-            download_name=f"reserva_{id}.pdf",
-            mimetype='application/pdf'
-        )
-        
-    except Exception as e:
-        print(f"🔴 [PDF] Error en ruta pdf_reserva: {e}")
-        print(traceback.format_exc())
-        flash('❌ Error inesperado al generar el PDF', 'danger')
-        return redirect(url_for('reservas.ver', id=id))
-   
-# ============================================
-# RUTA: ENVIAR POR WHATSAPP
-# ============================================
-@reservas_bp.route('/whatsapp/<int:id>')
-@login_required
-def whatsapp_reserva(id):
-    """Enviar reserva por WhatsApp con formato enriquecido (versión recuadro)"""
-    from urllib.parse import quote
-    
-    reserva = Reserva.query.get_or_404(id)
-    propiedad = Propiedad.query.get(reserva.propiedad_id)
-    
-    # Verificar permisos
     if propiedad.usuario_id != current_user.id:
         flash('No tienes permiso', 'danger')
         return redirect(url_for('reservas.index'))
     
     noches = (reserva.fecha_salida - reserva.fecha_entrada).days
+    return render_template('reservas/ver.html', reserva=reserva, noches=noches)
+
+@reservas_bp.route('/pdf/<int:id>')
+@login_required
+def pdf_reserva(id):
+    """Generar PDF"""
+    reserva = Reserva.query.get_or_404(id)
+    propiedad = Propiedad.query.get(reserva.propiedad_id)
     
-    # Obtener primer huésped
+    if propiedad.usuario_id != current_user.id:
+        flash('No tienes permiso', 'danger')
+        return redirect(url_for('reservas.index'))
+    
+    pdf = generar_pdf_reserva(id)
+    if not pdf:
+        flash('Error al generar PDF', 'danger')
+        return redirect(url_for('reservas.ver', id=id))
+    
+    buffer = BytesIO(pdf)
+    buffer.seek(0)
+    return send_file(
+        buffer,
+        as_attachment=True,
+        download_name=f"reserva_{id}.pdf",
+        mimetype='application/pdf'
+    )
+
+@reservas_bp.route('/whatsapp/<int:id>')
+@login_required
+def whatsapp_reserva(id):
+    """Compartir por WhatsApp"""
+    from urllib.parse import quote
+    
+    reserva = Reserva.query.get_or_404(id)
+    propiedad = Propiedad.query.get(reserva.propiedad_id)
+    
+    if propiedad.usuario_id != current_user.id:
+        flash('No tienes permiso', 'danger')
+        return redirect(url_for('reservas.index'))
+    
+    noches = (reserva.fecha_salida - reserva.fecha_entrada).days
     primer_huesped = reserva.huespedes.first()
-    if primer_huesped:
-        nombre_huesped = f"{primer_huesped.nombre} {primer_huesped.apellidos}"
-    else:
-        nombre_huesped = "Cliente"
+    nombre = f"{primer_huesped.nombre} {primer_huesped.apellidos}" if primer_huesped else "Cliente"
     
-    # 📦 FORMATO CON RECUADRO (VERSIÓN 3)
-    texto = f"""╔══════════════════════════╗
-║    *RESERVA CONFIRMADA*    ║
-╚══════════════════════════╝
+    texto = f"""🏨 *RESERVA CONFIRMADA*
+    
+📍 *Propiedad:* {reserva.propiedad.nombre}
+👤 *Huésped:* {nombre}
+📅 *Fechas:* {reserva.fecha_entrada} al {reserva.fecha_salida} ({noches} noches)
+💰 *Total:* {reserva.precio_total:.2f}€
+💳 *Pagado:* {reserva.deposito_pagado:.2f}€
+⏳ *Pendiente:* {reserva.saldo_pendiente:.2f}€
+📍 *Dirección:* {reserva.propiedad.direccion or ''}
+"""
+    
+    return redirect(f"https://wa.me/?text={quote(texto)}")
 
-🏠 *PROPIEDAD:* {reserva.propiedad.nombre}
-👤 *HUÉSPED:* {nombre_huesped}
-📅 *FECHAS:* {reserva.fecha_entrada.strftime('%d/%m/%Y')} al {reserva.fecha_salida.strftime('%d/%m/%Y')}
-🌙 *NOCHES:* {noches}
-💰 *TOTAL:* {reserva.precio_total:.2f}€
-💳 *PAGADO:* {reserva.deposito_pagado:.2f}€
-⏳ *PENDIENTE:* {reserva.saldo_pendiente:.2f}€
+@reservas_bp.route('/registro-viajeros/<int:id>')
+@login_required
+def registro_viajeros(id):
+    """Generar PDF con el registro de viajeros (SES.Hospedajes)"""
+    import pdfkit
+    from io import BytesIO
+    from datetime import datetime
+    
+    reserva = Reserva.query.get_or_404(id)
+    propiedad = Propiedad.query.get(reserva.propiedad_id)
+    
+    if propiedad.usuario_id != current_user.id:
+        flash('No tienes permiso', 'danger')
+        return redirect(url_for('reservas.ver', id=id))
+    
+    # Renderizar HTML para el PDF
+    html = render_template(
+        'documentos/registro_viajeros.html',
+        reserva=reserva,
+        now=datetime.now,
+        current_user=current_user
+    )
+    
+    # Configurar pdfkit
+    options = {
+        'page-size': 'A4',
+        'margin-top': '0.75in',
+        'margin-right': '0.75in',
+        'margin-bottom': '0.75in',
+        'margin-left': '0.75in',
+        'encoding': "UTF-8",
+        'enable-local-file-access': None
+    }
+    
+    # Ruta a wkhtmltopdf (ajusta según tu instalación)
+    path_wkhtmltopdf = r'C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe'
+    config = pdfkit.configuration(wkhtmltopdf=path_wkhtmltopdf)
+    
+    try:
+        pdf = pdfkit.from_string(html, False, options=options, configuration=config)
+        buffer = BytesIO(pdf)
+        buffer.seek(0)
+        return send_file(
+            buffer,
+            as_attachment=True,
+            download_name=f"registro_viajeros_{reserva.id}.pdf",
+            mimetype='application/pdf'
+        )
+    except Exception as e:
+        print(f"Error generando PDF: {e}")
+        flash('Error al generar el PDF. Intenta más tarde.', 'danger')
+        return redirect(url_for('reservas.ver', id=id))
 
-📍 *DIRECCIÓN:* {reserva.propiedad.direccion or 'No especificada'}
+@reservas_bp.route('/enviar-email/<int:id>', methods=['POST'])
+@login_required
+def enviar_email(id):
+    """Enviar PDF de la reserva por email"""
+    from flask_mail import Message
+    from app import mail
+    
+    reserva = Reserva.query.get_or_404(id)
+    propiedad = Propiedad.query.get(reserva.propiedad_id)
+    
+    if propiedad.usuario_id != current_user.id:
+        flash('No autorizado', 'danger')
+        return redirect(url_for('reservas.ver', id=id))
+    
+    primer_huesped = reserva.huespedes.first()
+    if not primer_huesped or not primer_huesped.email:
+        flash('El huésped no tiene email registrado', 'warning')
+        return redirect(url_for('reservas.ver', id=id))
+    
+    # Generar PDF
+    pdf = generar_pdf_reserva(id)
+    if not pdf:
+        flash('Error al generar el PDF', 'danger')
+        return redirect(url_for('reservas.ver', id=id))
+    
+    msg = Message(
+        subject=f"Confirmación de reserva #{reserva.id}",
+        recipients=[primer_huesped.email],
+        body=f"""Hola {primer_huesped.nombre},
+        
+Adjuntamos la confirmación de tu reserva en {reserva.propiedad.nombre}.
 
-─────────────────────────
-🔖 *Reserva #{reserva.id}*"""
+Fechas: {reserva.fecha_entrada} al {reserva.fecha_salida}
+Total: {reserva.precio_total}€
+
+¡Gracias por confiar en nosotros!
+
+--
+Gestor de Alquiler Vacacional"""
+    )
     
-    # Codificar para URL
-    texto_codificado = quote(texto)
+    msg.attach(f"reserva_{reserva.id}.pdf", "application/pdf", pdf)
     
-    # Opcional: Si tienes el teléfono del huésped, enviar directamente
-    telefono = None
-    if primer_huesped and primer_huesped.telefono:
-        # Limpiar teléfono (quitar espacios y símbolos)
-        telefono = ''.join(filter(str.isdigit, primer_huesped.telefono))
+    try:
+        mail.send(msg)
+        flash(f'PDF enviado correctamente a {primer_huesped.email}', 'success')
+    except Exception as e:
+        flash(f'Error al enviar email: {e}', 'danger')
     
-    if telefono:
-        whatsapp_url = f"https://wa.me/{telefono}?text={texto_codificado}"
-    else:
-        whatsapp_url = f"https://wa.me/?text={texto_codificado}"
-    
-    return redirect(whatsapp_url)
+    return redirect(url_for('reservas.ver', id=id))
+

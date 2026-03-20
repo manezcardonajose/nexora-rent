@@ -16,6 +16,9 @@
             </a>
             <a href="{{ url_for('propiedades.index') }}" class="btn btn-secondary">
                 <i class="bi bi-arrow-left"></i> Volver
+            <a href="{{ url_for('propiedades.ses_config', id=propiedad.id) }}" class="btn btn-danger">
+            <i class="bi bi-file-earmark-text"></i> Configuración SES
+            </a>
             </a>
         </div>
     </div>

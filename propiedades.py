@@ -103,3 +103,32 @@ def ver(id):
                            propiedad=propiedad,
                            reservas_futuras=reservas_futuras,
                            ahora=hoy)  # Pasamos 'ahora' por si la plantilla lo necesita
+
+@propiedades_bp.route('/ses/<int:id>')
+@login_required
+def ses_config(id):
+    """Página de configuración SES para una propiedad"""
+    propiedad = Propiedad.query.get_or_404(id)
+    if propiedad.usuario_id != current_user.id:
+        flash('No autorizado', 'danger')
+        return redirect(url_for('propiedades.index'))
+    
+    return render_template('propiedades/ses_config.html', propiedad=propiedad)
+
+@propiedades_bp.route('/ses/guardar/<int:id>', methods=['POST'])
+@login_required
+def guardar_ses(id):
+    """Guardar configuración SES"""
+    propiedad = Propiedad.query.get_or_404(id)
+    if propiedad.usuario_id != current_user.id:
+        flash('No autorizado', 'danger')
+        return redirect(url_for('propiedades.index'))
+    
+    propiedad.codigo_ses = request.form.get('codigo_ses')
+    propiedad.codigo_arrendador = request.form.get('codigo_arrendador')
+    propiedad.usuario_ses = request.form.get('usuario_ses')
+    propiedad.password_ses = request.form.get('password_ses')
+    
+    db.session.commit()
+    flash('Configuración SES guardada correctamente', 'success')
+    return redirect(url_for('propiedades.ver', id=id))
