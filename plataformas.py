@@ -2,10 +2,11 @@ from flask import Blueprint, render_template, redirect, url_for, flash, request
 from flask_login import login_required, current_user
 from models import db, PlataformaReserva, CalendarioIcal, Propiedad
 from forms import PlataformaForm, IcalForm
-from utils import importar_ical, exportar_ical
+from utils import importar_ical, exportar_ical, log_audit
 from datetime import datetime
 
 plataformas_bp = Blueprint('plataformas', __name__, url_prefix='/plataformas')
+
 
 @plataformas_bp.route('/')
 @login_required
@@ -13,6 +14,7 @@ def index():
     """Listado de plataformas conectadas"""
     plataformas = PlataformaReserva.query.filter_by(usuario_id=current_user.id).all()
     return render_template('plataformas/index.html', plataformas=plataformas)
+
 
 @plataformas_bp.route('/nueva', methods=['GET', 'POST'])
 @login_required
@@ -29,9 +31,15 @@ def nueva():
         )
         db.session.add(plataforma)
         db.session.commit()
+        
+        # 🔐 LOG: Creación de plataforma
+        log_audit(current_user.id, 'crear', 'plataforma', plataforma.id, None,
+                  {'nombre': plataforma.nombre, 'email': plataforma.email_cuenta})
+        
         flash('Plataforma añadida correctamente', 'success')
         return redirect(url_for('plataformas.index'))
     return render_template('plataformas/nueva.html', form=form)
+
 
 @plataformas_bp.route('/<int:id>/calendarios')
 @login_required
@@ -43,28 +51,49 @@ def calendarios(id):
         return redirect(url_for('plataformas.index'))
     
     calendarios = CalendarioIcal.query.filter_by(plataforma_id=id).all()
-    return render_template('plataformas/calendarios.html', plataforma=plataforma, calendarios=calendarios)
+    
+    # Crear formulario para nuevo calendario
+    ical_form = IcalForm()
+    # Cargar propiedades del usuario
+    propiedades = Propiedad.query.filter_by(usuario_id=current_user.id).all()
+    ical_form.propiedad_id.choices = [(p.id, p.nombre) for p in propiedades]
+    
+    return render_template('plataformas/calendarios.html', 
+                          plataforma=plataforma, 
+                          calendarios=calendarios,
+                          ical_form=ical_form)
+
 
 @plataformas_bp.route('/sincronizar-todo')
 @login_required
 def sincronizar_todo():
     """Sincronizar todos los calendarios iCal activos"""
-    from utils import importar_ical
-    
     calendarios = CalendarioIcal.query.join(PlataformaReserva).filter(
         PlataformaReserva.usuario_id == current_user.id,
         CalendarioIcal.activo == True
     ).all()
     
     sincronizados = 0
+    errores = []
+    
     for cal in calendarios:
         try:
-            eventos = importar_ical(cal.url, cal.propiedad_id)
+            # Obtener URL descifrada
+            url = cal.get_url()
+            eventos = importar_ical(url, cal.propiedad_id)
             cal.ultima_sincronizacion = datetime.utcnow()
             sincronizados += 1
         except Exception as e:
-            print(f"Error sincronizando {cal.nombre}: {e}")
+            errores.append(f"{cal.nombre or cal.plataforma_origen}: {str(e)}")
     
     db.session.commit()
+    
+    # 🔐 LOG: Sincronización masiva
+    log_audit(current_user.id, 'sincronizar', 'todos_calendarios', 0, None, 
+              {'sincronizados': sincronizados, 'errores': len(errores)})
+    
     flash(f'Sincronización completada. {sincronizados} calendarios actualizados.', 'success')
+    if errores:
+        flash(f'Errores en: {", ".join(errores[:3])}', 'warning')
+    
     return redirect(url_for('plataformas.index'))

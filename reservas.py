@@ -5,6 +5,7 @@ from forms import ReservaForm
 from utils import check_disponibilidad_habitaciones, generar_tareas_limpieza, generar_pdf_reserva
 from datetime import datetime
 from io import BytesIO
+from utils import log_audit
 
 # 🔴 PRIMERO: Crear el blueprint
 reservas_bp = Blueprint('reservas', __name__, url_prefix='/reservas')
@@ -94,6 +95,18 @@ def nueva():
         reserva.subtotal_habitaciones = subtotal
         reserva.calcular_totales()
         db.session.commit()
+
+ # 🔐 LOG: Creación de reserva
+        log_audit(current_user.id, 'crear', 'reserva', reserva.id, None, {
+            'propiedad_id': reserva.propiedad_id,
+            'fecha_entrada': str(reserva.fecha_entrada),
+            'fecha_salida': str(reserva.fecha_salida),
+            'num_huespedes': reserva.num_huespedes
+        })
+        
+        flash('Reserva creada', 'success')
+        return redirect(url_for('huespedes.index', reserva_id=reserva.id))
+
         
         generar_tareas_limpieza(reserva.id)
         
@@ -109,17 +122,22 @@ def editar(id):
     reserva = Reserva.query.get_or_404(id)
     propiedad = Propiedad.query.get(reserva.propiedad_id)
     
+    # Verificar permisos
     if propiedad.usuario_id != current_user.id:
-        flash('No tienes permiso', 'danger')
+        flash('No tienes permiso para editar esta reserva', 'danger')
         return redirect(url_for('reservas.index'))
     
     form = ReservaForm(obj=reserva)
-    propiedades = Propiedad.query.filter_by(usuario_id=current_user.id).all()
-    form.propiedad_id.choices = [(0, '-- Selecciona --')] + [(p.id, p.nombre) for p in propiedades]
     
+    # Cargar propiedades en el select
+    propiedades = Propiedad.query.filter_by(usuario_id=current_user.id).all()
+    form.propiedad_id.choices = [(0, '-- Selecciona una propiedad --')] + [(p.id, p.nombre) for p in propiedades]
+    
+    # Obtener IDs de habitaciones actualmente asignadas
     habitaciones_asignadas = [rh.habitacion_id for rh in reserva.habitaciones_asignadas]
     
     if form.validate_on_submit():
+        # Obtener nuevas habitaciones seleccionadas
         habitaciones_ids_str = request.form.getlist('habitaciones')
         nuevas_habitaciones = [int(id) for id in habitaciones_ids_str] if habitaciones_ids_str else []
         
@@ -127,21 +145,22 @@ def editar(id):
             flash('Debes seleccionar al menos una habitación', 'danger')
             return render_template('reservas/editar.html', form=form, reserva=reserva, habitaciones_asignadas=habitaciones_asignadas)
         
+        # Verificar disponibilidad de las nuevas habitaciones (excluyendo esta reserva)
         disponible, conflictivas = check_disponibilidad_habitaciones(
             form.propiedad_id.data,
             form.fecha_entrada.data,
             form.fecha_salida.data,
             nuevas_habitaciones,
-            reserva.id
+            reserva.id  # Excluir esta reserva
         )
         
         if not disponible:
             habitaciones_conflictivas = Habitacion.query.filter(Habitacion.id.in_(conflictivas)).all()
             nombres = ", ".join([h.nombre for h in habitaciones_conflictivas])
-            flash(f'Habitaciones no disponibles: {nombres}', 'danger')
+            flash(f'Las siguientes habitaciones no están disponibles: {nombres}', 'danger')
             return render_template('reservas/editar.html', form=form, reserva=reserva, habitaciones_asignadas=habitaciones_asignadas)
         
-        # Actualizar campos
+        # Actualizar campos básicos
         reserva.propiedad_id = form.propiedad_id.data
         reserva.num_huespedes = form.num_huespedes.data
         reserva.num_menores = form.num_menores.data or 0
@@ -151,11 +170,17 @@ def editar(id):
         reserva.estado = form.estado.data
         reserva.notas = form.notas.data
         reserva.origen = form.origen.data
-        reserva.external_id = form.external_id.data if form.external_id.data else None
         
-        # Actualizar habitaciones
+        # Manejar external_id (convertir '' a None)
+        if form.external_id.data:
+            reserva.external_id = form.external_id.data
+        else:
+            reserva.external_id = None
+        
+        # Actualizar habitaciones: eliminar las antiguas y añadir las nuevas
         ReservaHabitacion.query.filter_by(reserva_id=reserva.id).delete()
         
+        # Añadir nuevas asignaciones
         noches = (form.fecha_salida.data - form.fecha_entrada.data).days
         subtotal = 0
         
@@ -170,15 +195,23 @@ def editar(id):
                 db.session.add(rh)
                 subtotal += habitacion.precio_base * noches
         
+        # Recalcular totales
         reserva.subtotal_habitaciones = subtotal
         reserva.calcular_totales()
+        
         db.session.commit()
         
-        flash('Reserva actualizada', 'success')
+        # 🔐 LOG: Edición de reserva
+        from utils import log_audit
+        log_audit(current_user.id, 'editar', 'reserva', reserva.id, None, {'estado': reserva.estado})
+        
+        flash('Reserva actualizada correctamente', 'success')
         return redirect(url_for('reservas.index'))
     
-    return render_template('reservas/editar.html', form=form, reserva=reserva, habitaciones_asignadas=habitaciones_asignadas)
-
+    return render_template('reservas/editar.html', 
+                          form=form, 
+                          reserva=reserva,
+                          habitaciones_asignadas=habitaciones_asignadas)
 @reservas_bp.route('/eliminar/<int:id>', methods=['POST'])
 @login_required
 def eliminar(id):
@@ -192,6 +225,20 @@ def eliminar(id):
     
     db.session.delete(reserva)
     db.session.commit()
+
+ # 🔐 LOG: Eliminación de reserva
+    datos_eliminados = {
+        'id': reserva.id,
+        'propiedad_id': reserva.propiedad_id,
+        'fecha_entrada': str(reserva.fecha_entrada),
+        'fecha_salida': str(reserva.fecha_salida)
+    }
+    log_audit(current_user.id, 'eliminar', 'reserva', reserva.id, datos_eliminados, None)
+    
+    db.session.delete(reserva)
+    db.session.commit()
+    flash('Reserva eliminada', 'success')
+    return redirect(url_for('reservas.index'))
     flash('Reserva eliminada', 'success')
     return redirect(url_for('reservas.index'))
 

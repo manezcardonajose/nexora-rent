@@ -115,8 +115,7 @@ class ReservaForm(FlaskForm):
         ('NIE', 'NIE'),
         ('Pasaporte', 'Pasaporte')
     ], validators=[DataRequired()])
-    huesped_numero_documento = StringField('Número de documento', validators=[DataRequired()])
-    huesped_numero_soporte = StringField('Número de soporte (IDESP/TIE)', validators=[Optional()])
+   
     
     # Domicilio habitual
     huesped_domicilio = StringField('Domicilio (calle y número)', validators=[DataRequired()])
@@ -355,7 +354,17 @@ class HuespedForm(FlaskForm):
         ('Otro', 'Otro')
     ], validators=[DataRequired()])
     fecha_nacimiento = DateField('Fecha de nacimiento', validators=[DataRequired()], format='%Y-%m-%d')
-    nacionalidad = SelectField('Nacionalidad', choices=[], validators=[DataRequired()])
+    nacionalidad = SelectField('Nacionalidad', choices=[
+        ('', '-- Selecciona --'),
+        ('ES', 'España'),
+        ('FR', 'Francia'),
+        ('IT', 'Italia'),
+        ('DE', 'Alemania'),
+        ('UK', 'Reino Unido'),
+        ('US', 'Estados Unidos'),
+        ('PT', 'Portugal'),
+        ('OTRO', 'Otro')
+    ], validators=[DataRequired()])
     
     tipo_documento = SelectField('Tipo de documento', choices=[
         ('', '-- Selecciona --'),
@@ -376,7 +385,6 @@ class HuespedForm(FlaskForm):
     email = StringField('Email', validators=[Optional(), Email()])
     
     submit = SubmitField('Añadir huésped')
-
 class ReservaForm(FlaskForm):
     propiedad_id = SelectField('Propiedad', coerce=int, validators=[DataRequired()])
     

@@ -58,15 +58,15 @@ def index():
 @login_required
 def nuevo():
     form = IngresoForm()
-    
-    # Poblar selects
     propiedades = Propiedad.query.filter_by(usuario_id=current_user.id).all()
     form.propiedad_id.choices = [(0, 'Ninguna')] + [(p.id, p.nombre) for p in propiedades]
     
-    # Reservas de esas propiedades
+    # Cargar reservas de las propiedades del usuario
     propiedad_ids = [p.id for p in propiedades]
     reservas = Reserva.query.filter(Reserva.propiedad_id.in_(propiedad_ids)).order_by(Reserva.fecha_entrada.desc()).all()
-    form.reserva_id.choices = [(0, 'Ninguna')] + [(r.id, f"{r.huesped_nombre} ({r.fecha_entrada} - {r.fecha_salida})") for r in reservas]
+    
+    # 🔧 CORREGIDO: Mostrar primer huésped o "Sin huésped"
+    form.reserva_id.choices = [(0, 'Ninguna')] + [(r.id, f"{r.huespedes.first().nombre if r.huespedes.first() else 'Sin huésped'} ({r.fecha_entrada} - {r.fecha_salida})") for r in reservas]
     
     if form.validate_on_submit():
         ingreso = Ingreso(
@@ -74,54 +74,55 @@ def nuevo():
             reserva_id=form.reserva_id.data if form.reserva_id.data != 0 else None,
             fecha=form.fecha.data,
             concepto=form.concepto.data,
-            cantidad=form.cantidad.data,  # <-- CAMBIO
+            cantidad=form.cantidad.data,
             moneda=form.moneda.data,
             metodo_pago=form.metodo_pago.data,
             observaciones=form.observaciones.data
         )
         db.session.add(ingreso)
         db.session.commit()
+        
+        # 🔐 LOG
+        from utils import log_audit
+        log_audit(current_user.id, 'crear', 'ingreso', ingreso.id, None, {'concepto': ingreso.concepto, 'cantidad': ingreso.cantidad})
+        
         flash('Ingreso registrado correctamente', 'success')
         return redirect(url_for('ingresos.index'))
     
     return render_template('ingresos/nuevo.html', form=form)
 
-
 @ingresos_bp.route('/editar/<int:id>', methods=['GET', 'POST'])
 @login_required
 def editar(id):
     ingreso = Ingreso.query.get_or_404(id)
-    
-    # Verificar permisos
     if ingreso.propiedad and ingreso.propiedad.usuario_id != current_user.id:
         flash('No tienes permiso para editar este ingreso', 'danger')
         return redirect(url_for('ingresos.index'))
     
     form = IngresoForm(obj=ingreso)
-    
-    # Poblar selects
     propiedades = Propiedad.query.filter_by(usuario_id=current_user.id).all()
     form.propiedad_id.choices = [(0, 'Ninguna')] + [(p.id, p.nombre) for p in propiedades]
     
     propiedad_ids = [p.id for p in propiedades]
     reservas = Reserva.query.filter(Reserva.propiedad_id.in_(propiedad_ids)).order_by(Reserva.fecha_entrada.desc()).all()
-    form.reserva_id.choices = [(0, 'Ninguna')] + [(r.id, f"{r.huesped_nombre} ({r.fecha_entrada} - {r.fecha_salida})") for r in reservas]
+    
+    # 🔧 CORREGIDO: Mostrar primer huésped o "Sin huésped"
+    form.reserva_id.choices = [(0, 'Ninguna')] + [(r.id, f"{r.huespedes.first().nombre if r.huespedes.first() else 'Sin huésped'} ({r.fecha_entrada} - {r.fecha_salida})") for r in reservas]
     
     if form.validate_on_submit():
+        form.populate_obj(ingreso)
         ingreso.propiedad_id = form.propiedad_id.data if form.propiedad_id.data != 0 else None
         ingreso.reserva_id = form.reserva_id.data if form.reserva_id.data != 0 else None
-        ingreso.fecha = form.fecha.data
-        ingreso.concepto = form.concepto.data
-        ingreso.cantidad = form.cantidad.data  # <-- CAMBIO
-        ingreso.moneda = form.moneda.data
-        ingreso.metodo_pago = form.metodo_pago.data
-        ingreso.observaciones = form.observaciones.data
         db.session.commit()
+        
+        # 🔐 LOG
+        from utils import log_audit
+        log_audit(current_user.id, 'editar', 'ingreso', ingreso.id, None, {'concepto': ingreso.concepto, 'cantidad': ingreso.cantidad})
+        
         flash('Ingreso actualizado', 'success')
         return redirect(url_for('ingresos.index'))
     
     return render_template('ingresos/editar.html', form=form, ingreso=ingreso)
-
 
 @ingresos_bp.route('/ver/<int:id>')
 @login_required

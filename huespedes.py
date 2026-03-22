@@ -6,6 +6,7 @@ from datetime import datetime
 
 huespedes_bp = Blueprint('huespedes', __name__, url_prefix='/huespedes')
 
+
 @huespedes_bp.route('/reserva/<int:reserva_id>')
 @login_required
 def index(reserva_id):
@@ -18,6 +19,7 @@ def index(reserva_id):
         return redirect(url_for('reservas.index'))
     
     return render_template('huespedes/index.html', reserva=reserva)
+
 
 @huespedes_bp.route('/nuevo/<int:reserva_id>', methods=['GET', 'POST'])
 @login_required
@@ -37,7 +39,7 @@ def nuevo(reserva_id):
     
     form = HuespedForm()
     
-    # Configurar choices para nacionalidad (misma lista que en reserva)
+    # Configurar choices para nacionalidad
     form.nacionalidad.choices = [
         ('', '-- Selecciona --'),
         ('ES', 'España'),
@@ -51,11 +53,7 @@ def nuevo(reserva_id):
     ]
     
     if form.validate_on_submit():
-        # Si es el primer huésped, usar sus datos como referencia
-        if reserva.huespedes.count() == 0:
-            # Opcional: actualizar campos de la reserva con los datos del titular
-            pass
-        
+        # Crear el objeto huésped
         huesped = Huesped(
             reserva_id=reserva_id,
             nombre=form.nombre.data,
@@ -63,14 +61,17 @@ def nuevo(reserva_id):
             sexo=form.sexo.data,
             fecha_nacimiento=form.fecha_nacimiento.data,
             nacionalidad=form.nacionalidad.data,
-            tipo_documento=form.tipo_documento.data,
-            numero_documento=form.numero_documento.data,
-            numero_soporte=form.numero_soporte.data
+            tipo_documento=form.tipo_documento.data
         )
         
-        # Domicilio (si no es el mismo)
+        # Asignar documentos con cifrado
+        huesped.set_numero_documento(form.numero_documento.data)
+        huesped.set_numero_soporte(form.numero_soporte.data)
+        
+        # Domicilio
         if form.mismo_domicilio.data:
-            # Usar datos del primer huésped o dejarlos en blanco
+            # Si es el primer huésped, podrías copiar datos del titular
+            # Por ahora dejamos en blanco
             pass
         else:
             huesped.domicilio = form.domicilio.data
@@ -84,10 +85,16 @@ def nuevo(reserva_id):
         db.session.add(huesped)
         db.session.commit()
         
+        # 🔐 LOG: Creación de huésped
+        from utils import log_audit
+        log_audit(current_user.id, 'crear', 'huesped', huesped.id, None,
+                  {'nombre': huesped.nombre, 'apellidos': huesped.apellidos, 'nacionalidad': huesped.nacionalidad})
+        
         flash('Huésped añadido correctamente', 'success')
         return redirect(url_for('huespedes.index', reserva_id=reserva_id))
     
     return render_template('huespedes/nuevo.html', form=form, reserva=reserva)
+
 
 @huespedes_bp.route('/editar/<int:id>', methods=['GET', 'POST'])
 @login_required
@@ -116,13 +123,52 @@ def editar(id):
         ('OTRO', 'Otro')
     ]
     
+    # Para el checkbox de mismo domicilio, necesitamos determinar si el domicilio
+    # está vacío o es el mismo que el titular (opcional)
+    if not huesped.domicilio and not huesped.ciudad:
+        form.mismo_domicilio.data = True
+    
     if form.validate_on_submit():
-        form.populate_obj(huesped)
+        # Actualizar campos básicos
+        huesped.nombre = form.nombre.data
+        huesped.apellidos = form.apellidos.data
+        huesped.sexo = form.sexo.data
+        huesped.fecha_nacimiento = form.fecha_nacimiento.data
+        huesped.nacionalidad = form.nacionalidad.data
+        huesped.tipo_documento = form.tipo_documento.data
+        
+        # Actualizar documentos con cifrado
+        huesped.set_numero_documento(form.numero_documento.data)
+        huesped.set_numero_soporte(form.numero_soporte.data)
+        
+        # Domicilio
+        if form.mismo_domicilio.data:
+            # Si es el mismo domicilio, limpiamos los campos
+            huesped.domicilio = None
+            huesped.ciudad = None
+            huesped.codigo_postal = None
+            huesped.pais = None
+        else:
+            huesped.domicilio = form.domicilio.data
+            huesped.ciudad = form.ciudad.data
+            huesped.codigo_postal = form.codigo_postal.data
+            huesped.pais = form.pais.data
+        
+        huesped.telefono = form.telefono.data
+        huesped.email = form.email.data
+        
         db.session.commit()
+        
+        # 🔐 LOG: Edición de huésped
+        from utils import log_audit
+        log_audit(current_user.id, 'editar', 'huesped', huesped.id, None,
+                  {'nombre': huesped.nombre, 'apellidos': huesped.apellidos})
+        
         flash('Huésped actualizado correctamente', 'success')
         return redirect(url_for('huespedes.index', reserva_id=reserva.id))
     
     return render_template('huespedes/editar.html', form=form, huesped=huesped, reserva=reserva)
+
 
 @huespedes_bp.route('/eliminar/<int:id>', methods=['POST'])
 @login_required
@@ -141,6 +187,11 @@ def eliminar(id):
         flash('No puedes eliminar el último huésped. Elimina la reserva si es necesario.', 'danger')
         return redirect(url_for('huespedes.index', reserva_id=reserva.id))
     
+    # 🔐 LOG: Eliminación de huésped
+    from utils import log_audit
+    log_audit(current_user.id, 'eliminar', 'huesped', huesped.id,
+              {'nombre': huesped.nombre, 'apellidos': huesped.apellidos}, None)
+    
     db.session.delete(huesped)
     db.session.commit()
     flash('Huésped eliminado correctamente', 'success')
@@ -158,4 +209,4 @@ def ver(id):
         flash('No autorizado', 'danger')
         return redirect(url_for('reservas.index'))
     
-    return render_template('huespedes/ver.html', huesped=huesped)
+    return render_template('huespedes/ver.html', huesped=huesped, reserva=reserva)

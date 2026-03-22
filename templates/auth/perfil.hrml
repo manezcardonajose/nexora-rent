@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <h1 class="mb-4"><i class="bi bi-person-circle"></i> Mi perfil</h1>
+    
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">Información personal</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>Usuario:</strong> {{ current_user.username }}</p>
+                    <p><strong>Email:</strong> {{ current_user.email }}</p>
+                    <p><strong>Nombre:</strong> {{ current_user.nombre or 'No especificado' }}</p>
+                    <p><strong>Apellidos:</strong> {{ current_user.apellidos or 'No especificado' }}</p>
+                    <p><strong>Fecha de registro:</strong> {{ current_user.fecha_registro.strftime('%d/%m/%Y') }}</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Exportar mis datos</h5>
+                </div>
+                <div class="card-body">
+                    <p>Obtén una copia completa de todos tus datos personales en formato JSON.</p>
+                    <p class="text-muted small">Incluye: propiedades, reservas, huéspedes, pagos y todos los registros asociados.</p>
+                    <a href="{{ url_for('auth.exportar_datos') }}" class="btn btn-primary">
+                        <i class="bi bi-download"></i> Exportar datos
+                    </a>
+                </div>
+            </div>
+            
+            <div class="card border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0">Eliminar mi cuenta</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-danger"><strong>⚠️ Atención:</strong> Esta acción es irreversible.</p>
+                    <p>Se eliminarán permanentemente:</p>
+                    <ul>
+                        <li>Tu cuenta de usuario</li>
+                        <li>Todas tus propiedades</li>
+                        <li>Todas las reservas asociadas</li>
+                        <li>Todos los huéspedes registrados</li>
+                        <li>Historial de pagos y movimientos</li>
+                    </ul>
+                    <form method="POST" action="{{ url_for('auth.eliminar_cuenta') }}" onsubmit="return confirm('¿Estás ABSOLUTAMENTE SEGURO de que quieres eliminar tu cuenta y todos tus datos? Esta acción no se puede deshacer.')">
+                        <button type="submit" class="btn btn-danger">
+                            <i class="bi bi-trash"></i> Eliminar mi cuenta permanentemente
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

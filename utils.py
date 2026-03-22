@@ -289,3 +289,76 @@ def generar_pdf_reserva(reserva_id):
         print(f"🔴 [PDF] Error general: {e}")
         print(traceback.format_exc())
         return None
+
+from cryptography.fernet import Fernet
+import os
+
+def get_cipher():
+    key = os.environ.get('CIPHER_KEY')
+    if not key:
+        # En desarrollo, podrías generar una temporal (no recomendado para producción)
+        key = 'F6_8tqQw-lFq3dG7xYzZJkNmPqRsTuVwXyZ123456789='  # ejemplo, no usar en producción
+    return Fernet(key.encode())
+
+def encrypt_data(data):
+    if not data:
+        return None
+    cipher = get_cipher()
+    return cipher.encrypt(data.encode()).decode()
+
+def decrypt_data(encrypted):
+    if not encrypted:
+        return None
+    cipher = get_cipher()
+    return cipher.decrypt(encrypted.encode()).decode()
+
+import json
+from models import AuditLog
+from flask import request
+
+def log_audit(usuario_id, accion, entidad, entidad_id, datos_previos=None, datos_nuevos=None):
+    log = AuditLog(
+        usuario_id=usuario_id,
+        accion=accion,
+        entidad=entidad,
+        entidad_id=entidad_id,
+        datos_previos=json.dumps(datos_previos, default=str) if datos_previos else None,
+        datos_nuevos=json.dumps(datos_nuevos, default=str) if datos_nuevos else None,
+        ip=request.remote_addr
+    )
+
+# Añadir al final del archivo utils.py
+import json
+from models import AuditLog
+from flask import request
+from datetime import datetime
+
+def log_audit(usuario_id, accion, entidad, entidad_id, datos_previos=None, datos_nuevos=None):
+    """
+    Registra una acción en el log de auditoría.
+    - usuario_id: ID del usuario que realiza la acción (current_user.id)
+    - accion: 'crear', 'ver', 'editar', 'eliminar', 'exportar', 'sincronizar'
+    - entidad: 'propiedad', 'habitacion', 'reserva', 'huesped', 'pago', 'plataforma'
+    - entidad_id: ID del objeto afectado
+    - datos_previos: dict con datos antes del cambio (para ediciones)
+    - datos_nuevos: dict con datos después del cambio
+    """
+    from models import db
+    try:
+        log = AuditLog(
+            usuario_id=usuario_id,
+            accion=accion,
+            entidad=entidad,
+            entidad_id=entidad_id,
+            datos_previos=json.dumps(datos_previos, default=str) if datos_previos else None,
+            datos_nuevos=json.dumps(datos_nuevos, default=str) if datos_nuevos else None,
+            ip=request.remote_addr,
+            fecha=datetime.utcnow()
+        )
+        db.session.add(log)
+        db.session.commit()
+    except Exception as e:
+        # Si falla el log, no debe detener la aplicación
+        print(f"Error al registrar auditoría: {e}")
+    db.session.add(log)
+    db.session.commit()

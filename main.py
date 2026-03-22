@@ -50,3 +50,7 @@ def dashboard():
 @main_bp.route('/ayuda')
 def ayuda():
     return render_template('ayuda/index.html')
+
+@main_bp.route('/politica-privacidad')
+def politica_privacidad():
+    return render_template('legal/politica.html')

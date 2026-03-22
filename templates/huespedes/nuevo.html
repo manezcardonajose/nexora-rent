@@ -127,4 +127,11 @@ document.addEventListener('DOMContentLoaded', function() {
     toggleDomicilioFields(); // Estado inicial
 });
 </script>
+
+<div class="mb-3 form-check">
+    <input type="checkbox" class="form-check-input" id="consentimiento" name="consentimiento" required>
+    <label class="form-check-label" for="consentimiento">
+        Declaro que he informado al huésped sobre el tratamiento de sus datos personales según la <a href="{{ url_for('main.politica_privacidad') }}" target="_blank">Política de Privacidad</a> y que cuenta con su consentimiento para su registro en el sistema de alojamiento.
+    </label>
+</div>
 {% endblock %}

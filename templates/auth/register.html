@@ -1,0 +1,25 @@
+from models import Consentimiento
+from flask import request
+
+@auth_bp.route('/register', methods=['GET', 'POST'])
+def register():
+    form = RegistrationForm()
+    if form.validate_on_submit():
+        user = User(...)
+        db.session.add(user)
+        db.session.flush()  # para obtener user.id
+
+        # Registrar consentimiento
+        if request.form.get('consentimiento'):
+            consent = Consentimiento(
+                usuario_id=user.id,
+                version_politica='1.0',
+                ip=request.remote_addr,
+                aceptado=True
+            )
+            db.session.add(consent)
+
+        db.session.commit()
+        flash('Registro exitoso', 'success')
+        return redirect(url_for('auth.login'))
+    return render_template('auth/register.html', form=form)

@@ -194,20 +194,20 @@ class Reserva(db.Model):
 # ============================================
 class Huesped(db.Model):
     __tablename__ = 'huespedes'
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True)  # 🔴 ESTA LÍNEA ES LA QUE FALTA
     reserva_id = db.Column(db.Integer, db.ForeignKey('reservas.id'), nullable=False)
     
-    # Datos personales (obligatorios SES)
+    # Datos personales
     nombre = db.Column(db.String(100), nullable=False)
     apellidos = db.Column(db.String(100), nullable=False)
     sexo = db.Column(db.String(10), nullable=False)
     fecha_nacimiento = db.Column(db.Date, nullable=False)
     nacionalidad = db.Column(db.String(50), nullable=False)
     
-    # Documento de identidad
-    tipo_documento = db.Column(db.String(20), nullable=False)  # DNI, NIE, Pasaporte
-    numero_documento = db.Column(db.String(20), nullable=False)
-    numero_soporte = db.Column(db.String(20), nullable=True)   # IDESP/TIE (para DNI/NIE)
+    # Documento de identidad (cifrados)
+    tipo_documento = db.Column(db.String(20), nullable=False)
+    numero_documento = db.Column(db.String(200))   # almacenado cifrado
+    numero_soporte = db.Column(db.String(200))     # almacenado cifrado
     
     # Domicilio habitual
     domicilio = db.Column(db.String(200))
@@ -222,9 +222,25 @@ class Huesped(db.Model):
     # Relaciones
     reserva = db.relationship('Reserva', back_populates='huespedes')
     
+    # 🔐 Métodos para cifrado/descifrado
+    def set_numero_documento(self, valor):
+        from utils import encrypt_data
+        self.numero_documento = encrypt_data(valor) if valor else None
+    
+    def get_numero_documento(self):
+        from utils import decrypt_data
+        return decrypt_data(self.numero_documento)
+    
+    def set_numero_soporte(self, valor):
+        from utils import encrypt_data
+        self.numero_soporte = encrypt_data(valor) if valor else None
+    
+    def get_numero_soporte(self):
+        from utils import decrypt_data
+        return decrypt_data(self.numero_soporte)
+    
     def __repr__(self):
         return f'<Huesped {self.nombre} {self.apellidos}>'
-
 
 # ============================================
 # MODELO RESERVA-HABITACION (ASIGNACIÓN)
@@ -395,8 +411,8 @@ class CalendarioIcal(db.Model):
     propiedad_id = db.Column(db.Integer, db.ForeignKey('propiedades.id'), nullable=False)
     plataforma_id = db.Column(db.Integer, db.ForeignKey('plataformas.id'), nullable=True)
     nombre = db.Column(db.String(100))
-    url = db.Column(db.String(500), nullable=False)
-    plataforma_origen = db.Column(db.String(50))  # airbnb, booking, etc.
+    url = db.Column(db.String(500), nullable=False)           # Almacenado cifrado
+    plataforma_origen = db.Column(db.String(50))
     ultima_sincronizacion = db.Column(db.DateTime)
     activo = db.Column(db.Boolean, default=True)
     fecha_creacion = db.Column(db.DateTime, default=datetime.utcnow)
@@ -405,5 +421,48 @@ class CalendarioIcal(db.Model):
     propiedad = db.relationship('Propiedad', back_populates='calendarios_ical')
     plataforma = db.relationship('PlataformaReserva', back_populates='calendarios_plataforma')
     
+    # 🔐 Métodos para cifrado/descifrado de URL
+    def set_url(self, valor):
+        """Guarda la URL cifrada"""
+        from utils import encrypt_data
+        self.url = encrypt_data(valor) if valor else None
+    
+    def get_url(self):
+        """Obtiene la URL descifrada"""
+        from utils import decrypt_data
+        return decrypt_data(self.url)
+    
     def __repr__(self):
         return f'<CalendarioIcal {self.nombre or self.plataforma_origen}>'
+# Añade al final del archivo, pero antes de las relaciones si hay dependencias
+class AuditLog(db.Model):
+    __tablename__ = 'audit_log'
+    id = db.Column(db.Integer, primary_key=True)
+    usuario_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
+    usuario = db.relationship('User', foreign_keys=[usuario_id])
+    accion = db.Column(db.String(100), nullable=False)      # 'crear', 'ver', 'editar', 'eliminar', 'exportar'
+    entidad = db.Column(db.String(50), nullable=False)      # 'reserva', 'huesped', 'propiedad', etc.
+    entidad_id = db.Column(db.Integer)
+    datos_previos = db.Column(db.Text)                     # JSON con los datos antes del cambio
+    datos_nuevos = db.Column(db.Text)                      # JSON con los datos después del cambio
+    ip = db.Column(db.String(45))
+    fecha = db.Column(db.DateTime, default=datetime.utcnow)
+
+class Consentimiento(db.Model):
+    __tablename__ = 'consentimientos'
+    id = db.Column(db.Integer, primary_key=True)
+    usuario_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
+    huesped_id = db.Column(db.Integer, db.ForeignKey('huespedes.id'), nullable=True)
+    version_politica = db.Column(db.String(10), default='1.0')
+    fecha = db.Column(db.DateTime, default=datetime.utcnow)
+    ip = db.Column(db.String(45))
+    aceptado = db.Column(db.Boolean, default=True)
+
+class Acceso(db.Model):
+    __tablename__ = 'accesos'
+    id = db.Column(db.Integer, primary_key=True)
+    usuario_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
+    ip = db.Column(db.String(45))
+    fecha = db.Column(db.DateTime, default=datetime.utcnow)
+    exito = db.Column(db.Boolean, default=False)
+    mensaje = db.Column(db.String(200))

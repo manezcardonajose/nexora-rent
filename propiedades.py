@@ -3,6 +3,7 @@ from flask_login import login_required, current_user
 from models import db, Propiedad, Reserva
 from forms import PropiedadForm
 from datetime import datetime
+from utils import log_audit
 
 # Crear el blueprint
 propiedades_bp = Blueprint('propiedades', __name__, url_prefix='/propiedades')
@@ -41,6 +42,10 @@ def nueva():
         )
         db.session.add(propiedad)
         db.session.commit()
+        # 🔐 LOG: Creación de propiedad
+        log_audit(current_user.id, 'crear', 'propiedad', propiedad.id, 
+                  None, {'nombre': propiedad.nombre, 'direccion': propiedad.direccion})
+        
         flash('Propiedad creada correctamente', 'success')
         return redirect(url_for('propiedades.index'))
     return render_template('propiedades/nueva.html', form=form)
@@ -50,6 +55,7 @@ def nueva():
 def editar(id):
     """Editar una propiedad existente"""
     propiedad = Propiedad.query.get_or_404(id)
+    log_audit(current_user.id, 'crear', 'propiedad', propiedad.id, None, {'nombre': propiedad.nombre})
     
     # Verificar que la propiedad pertenece al usuario
     if propiedad.usuario_id != current_user.id:
@@ -62,23 +68,37 @@ def editar(id):
         db.session.commit()
         flash('Propiedad actualizada correctamente', 'success')
         return redirect(url_for('propiedades.index'))
-    
+
+ # 🔐 LOG: Edición de propiedad
+        datos_despues = {
+            'nombre': propiedad.nombre,
+            'direccion': propiedad.direccion,
+            'precio_noche': propiedad.precio_noche,
+            'activa': propiedad.activa
+        }
+        log_audit(current_user.id, 'editar', 'propiedad', propiedad.id, datos_antes, datos_despues)
+        
+        flash('Propiedad actualizada', 'success')
+        return redirect(url_for('propiedades.index'))
     return render_template('propiedades/editar.html', form=form, propiedad=propiedad)
+    
+   
 
 @propiedades_bp.route('/eliminar/<int:id>', methods=['POST'])
 @login_required
 def eliminar(id):
-    """Eliminar una propiedad"""
     propiedad = Propiedad.query.get_or_404(id)
-    
-    # Verificar que la propiedad pertenece al usuario
     if propiedad.usuario_id != current_user.id:
-        flash('No tienes permiso para eliminar esta propiedad', 'danger')
+        flash('No tienes permiso', 'danger')
         return redirect(url_for('propiedades.index'))
+    
+    # 🔐 LOG: Eliminación de propiedad (guardar datos antes de eliminar)
+    datos_eliminados = {'nombre': propiedad.nombre, 'direccion': propiedad.direccion}
+    log_audit(current_user.id, 'eliminar', 'propiedad', propiedad.id, datos_eliminados, None)
     
     db.session.delete(propiedad)
     db.session.commit()
-    flash('Propiedad eliminada correctamente', 'success')
+    flash('Propiedad eliminada', 'success')
     return redirect(url_for('propiedades.index'))
 
 @propiedades_bp.route('/<int:id>')
