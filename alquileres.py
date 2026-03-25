@@ -45,7 +45,6 @@ def nuevo_inquilino():
 
     return render_template('alquileres/nuevo_inquilino.html')
 
-
 # ============================================
 # NUEVO CONTRATO
 # ============================================

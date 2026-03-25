@@ -458,6 +458,49 @@ class Consentimiento(db.Model):
     ip = db.Column(db.String(45))
     aceptado = db.Column(db.Boolean, default=True)
 
+# ============================================
+# MODELO INQUILINO
+# ============================================
+class Inquilino(db.Model):
+    __tablename__ = 'inquilinos'
+
+    id = db.Column(db.Integer, primary_key=True)
+    nombre = db.Column(db.String(100), nullable=False)
+    apellidos = db.Column(db.String(100), nullable=False)
+    dni = db.Column(db.String(20))
+    telefono = db.Column(db.String(20))
+    email = db.Column(db.String(120))
+
+    contratos = db.relationship('Contrato', back_populates='inquilino')
+
+    def __repr__(self):
+        return f'<Inquilino {self.nombre} {self.apellidos}>'
+
+# ============================================
+# MODELO CONTRATO
+# ============================================
+class Contrato(db.Model):
+    __tablename__ = 'contratos'
+
+    id = db.Column(db.Integer, primary_key=True)
+    
+    propiedad_id = db.Column(db.Integer, db.ForeignKey('propiedades.id'), nullable=False)
+    inquilino_id = db.Column(db.Integer, db.ForeignKey('inquilinos.id'), nullable=False)
+
+    fecha_inicio = db.Column(db.Date, nullable=False)
+    fecha_fin = db.Column(db.Date)
+
+    renta_mensual = db.Column(db.Float, nullable=False)
+    fianza = db.Column(db.Float, default=0)
+
+    estado = db.Column(db.String(20), default='activo')
+
+    propiedad = db.relationship('Propiedad')
+    inquilino = db.relationship('Inquilino', back_populates='contratos')
+
+    def __repr__(self):
+        return f'<Contrato {self.id}>'
+
 class Acceso(db.Model):
     __tablename__ = 'accesos'
     id = db.Column(db.Integer, primary_key=True)
