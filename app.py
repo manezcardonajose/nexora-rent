@@ -39,6 +39,7 @@ from bloqueos import bloqueos_bp
 from plataformas import plataformas_bp
 from informes import informes_bp
 from huespedes import huespedes_bp
+from alquileres import alquileres_bp
 
 # Registrar todos los blueprints
 app.register_blueprint(propiedades_bp)
@@ -56,6 +57,8 @@ app.register_blueprint(bloqueos_bp)
 app.register_blueprint(plataformas_bp)
 app.register_blueprint(informes_bp)
 app.register_blueprint(huespedes_bp)
+from alquileres import alquileres_bp
+app.register_blueprint(alquileres_bp)
 
 @login.user_loader
 def load_user(user_id):
