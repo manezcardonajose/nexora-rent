@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h2>Nuevo contador</h2>
+
+<form method="POST">
+    <div class="mb-3">
+        <label class="form-label">Propiedad</label>
+        <select name="propiedad_id" class="form-control">
+            {% for p in propiedades %}
+            <option value="{{ p.id }}">{{ p.nombre }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Tipo</label>
+        <select name="tipo" class="form-control">
+            <option value="agua">Agua</option>
+            <option value="luz">Luz</option>
+            <option value="gas">Gas</option>
+        </select>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Nombre</label>
+        <input type="text" name="nombre" class="form-control" placeholder="Contador agua cocina">
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Número de serie</label>
+        <input type="text" name="numero_serie" class="form-control">
+    </div>
+
+    <div class="mb-3 form-check">
+        <input type="checkbox" name="activo" class="form-check-input" checked>
+        <label class="form-check-label">Activo</label>
+    </div>
+
+    <button class="btn btn-success">Guardar contador</button>
+</form>
+
+{% endblock %}

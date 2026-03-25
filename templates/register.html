@@ -46,6 +46,12 @@
                         <span class="text-danger">{{ error }}</span>
                         {% endfor %}
                     </div>
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="consentimiento" name="consentimiento" required>
+                        <label class="form-check-label" for="consentimiento">
+                            He leído y acepto la <a href="{{ url_for('main.politica_privacidad') }}" target="_blank">Política de Privacidad</a> y el tratamiento de mis datos personales según el RGPD.
+                        </label>
+                    </div>
                     <button type="submit" class="btn btn-primary">Registrarse</button>
                     <a href="{{ url_for('auth.login') }}" class="btn btn-link">¿Ya tienes cuenta? Inicia sesión</a>
                 </form>

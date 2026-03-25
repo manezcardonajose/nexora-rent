@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h2>Nuevo recibo contrato #{{ contrato.id }}</h2>
+
+<div class="card mb-3">
+    <div class="card-body">
+        <p><strong>Propiedad:</strong> {{ contrato.propiedad.nombre }}</p>
+        <p><strong>Inquilino:</strong> {{ contrato.inquilino.nombre }} {{ contrato.inquilino.apellidos }}</p>
+        <p><strong>Renta mensual:</strong> {{ contrato.renta_mensual }} €</p>
+    </div>
+</div>
+
+{% if lecturas_periodo %}
+<div class="card mb-3">
+    <div class="card-header">
+        <strong>Lecturas repercutibles del período {{ periodo_actual }}</strong>
+    </div>
+    <div class="card-body">
+        <table class="table table-sm">
+            <thead>
+                <tr>
+                    <th>Tipo</th>
+                    <th>Contador</th>
+                    <th>Consumo</th>
+                    <th>Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for l in lecturas_periodo %}
+                <tr>
+                    <td>{{ l.contador.tipo }}</td>
+                    <td>{{ l.contador.nombre }}</td>
+                    <td>{{ l.consumo }}</td>
+                    <td>{{ l.importe_total }} €</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+
+<form method="POST">
+    <div class="mb-3">
+        <label class="form-label">Período</label>
+        <input type="text" name="periodo" class="form-control" value="{{ periodo_actual }}" placeholder="2026-03">
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Concepto</label>
+        <input type="text" name="concepto" class="form-control" value="Alquiler mensual">
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Importe base</label>
+        <input type="number" step="0.01" name="importe_base" class="form-control" value="{{ contrato.renta_mensual }}">
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Agua</label>
+        <input type="number" step="0.01" name="importe_agua" class="form-control" value="{{ importe_agua }}">
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Luz</label>
+        <input type="number" step="0.01" name="importe_luz" class="form-control" value="{{ importe_luz }}">
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Otros importes</label>
+        <input type="number" step="0.01" name="otros_importes" class="form-control" value="0">
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Observaciones</label>
+        <textarea name="observaciones" class="form-control"></textarea>
+    </div>
+
+    <button class="btn btn-success">Guardar recibo</button>
+</form>
+
+{% endblock %}

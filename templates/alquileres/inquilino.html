@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h2>Nuevo Inquilino</h2>
+
+<form method="POST">
+    <input name="nombre" placeholder="Nombre" class="form-control mb-2">
+    <input name="apellidos" placeholder="Apellidos" class="form-control mb-2">
+    <input name="dni" placeholder="DNI" class="form-control mb-2">
+    <input name="telefono" placeholder="Teléfono" class="form-control mb-2">
+    <input name="email" placeholder="Email" class="form-control mb-2">
+
+    <button class="btn btn-success">Guardar</button>
+</form>
+
+{% endblock %}

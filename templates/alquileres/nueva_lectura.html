@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h2>Nueva lectura</h2>
+
+<form method="POST">
+    <div class="mb-3">
+        <label class="form-label">Contador</label>
+        <select name="contador_id" class="form-control">
+            {% for c in contadores %}
+            <option value="{{ c.id }}">{{ c.nombre }} ({{ c.tipo }}) - {{ c.propiedad.nombre }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Contrato asociado</label>
+        <select name="contrato_id" class="form-control">
+            <option value="">-- Sin asociar --</option>
+            {% for c in contratos %}
+            <option value="{{ c.id }}">
+                #{{ c.id }} - {{ c.inquilino.nombre }} {{ c.inquilino.apellidos }} - {{ c.propiedad.nombre }}
+            </option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Fecha lectura</label>
+        <input type="date" name="fecha_lectura" class="form-control" value="{{ date.today() if false else '' }}">
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Lectura anterior</label>
+        <input type="number" step="0.01" name="lectura_anterior" class="form-control">
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Lectura actual</label>
+        <input type="number" step="0.01" name="lectura_actual" class="form-control">
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Precio unitario</label>
+        <input type="number" step="0.0001" name="precio_unitario" class="form-control">
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Observaciones</label>
+        <textarea name="observaciones" class="form-control"></textarea>
+    </div>
+
+    <button class="btn btn-success">Guardar lectura</button>
+</form>
+
+{% endblock %}

@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h2>Recibos de alquiler</h2>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Contrato</th>
+            <th>Período</th>
+            <th>Total</th>
+            <th>Estado</th>
+            <th>Pago</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for r in recibos %}
+        <tr>
+            <td>{{ r.id }}</td>
+            <td>#{{ r.contrato.id }}</td>
+            <td>{{ r.periodo }}</td>
+            <td>{{ r.total }} €</td>
+            <td>{{ r.estado }}</td>
+            <td>
+                {% if r.estado != 'pagado' %}
+                <form method="POST" action="{{ url_for('alquileres.pagar_recibo', id=r.id) }}">
+                    <select name="metodo_pago" class="form-control form-control-sm mb-1">
+                        <option value="transferencia">Transferencia</option>
+                        <option value="efectivo">Efectivo</option>
+                        <option value="bizum">Bizum</option>
+                    </select>
+                    <button class="btn btn-sm btn-success">Marcar pagado</button>
+                </form>
+                {% else %}
+                Pagado el {{ r.fecha_pago }}
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% endblock %}

@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h2>Contadores de suministros</h2>
+
+<div class="mb-3">
+    <a href="{{ url_for('alquileres.nuevo_contador') }}" class="btn btn-primary">Nuevo contador</a>
+    <a href="{{ url_for('alquileres.nueva_lectura') }}" class="btn btn-success">Nueva lectura</a>
+</div>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Propiedad</th>
+            <th>Tipo</th>
+            <th>Nombre</th>
+            <th>Nº Serie</th>
+            <th>Activo</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for c in contadores %}
+        <tr>
+            <td>{{ c.id }}</td>
+            <td>{{ c.propiedad.nombre }}</td>
+            <td>{{ c.tipo }}</td>
+            <td>{{ c.nombre }}</td>
+            <td>{{ c.numero_serie or '-' }}</td>
+            <td>{{ 'Sí' if c.activo else 'No' }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% endblock %}

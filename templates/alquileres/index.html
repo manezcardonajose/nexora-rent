@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h2>Contratos de alquiler</h2>
+
+<div class="mb-3">
+    <a href="{{ url_for('alquileres.nuevo_contrato') }}" class="btn btn-primary">Nuevo contrato</a>
+    <a href="{{ url_for('alquileres.nuevo_inquilino') }}" class="btn btn-secondary">Nuevo inquilino</a>
+    <a href="{{ url_for('alquileres.recibos') }}" class="btn btn-dark">Ver recibos</a>
+</div>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Propiedad</th>
+            <th>Inquilino</th>
+            <th>Inicio</th>
+            <th>Fin</th>
+            <th>Renta</th>
+            <th>Estado</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for c in contratos %}
+        <tr>
+            <td>{{ c.id }}</td>
+            <td>{{ c.propiedad.nombre }}</td>
+            <td>{{ c.inquilino.nombre }} {{ c.inquilino.apellidos }}</td>
+            <td>{{ c.fecha_inicio }}</td>
+            <td>{{ c.fecha_fin or '-' }}</td>
+            <td>{{ c.renta_mensual }} €</td>
+            <td>{{ c.estado }}</td>
+            <td>
+                <a href="{{ url_for('alquileres.ver_contrato', id=c.id) }}" class="btn btn-sm btn-outline-primary">
+                    Ver
+                </a>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% endblock %}

@@ -466,3 +466,178 @@ class Acceso(db.Model):
     fecha = db.Column(db.DateTime, default=datetime.utcnow)
     exito = db.Column(db.Boolean, default=False)
     mensaje = db.Column(db.String(200))
+
+# ============================================
+# MODELO INQUILINO
+# ============================================
+class Inquilino(db.Model):
+    __tablename__ = 'inquilinos'
+
+    id = db.Column(db.Integer, primary_key=True)
+    nombre = db.Column(db.String(100), nullable=False)
+    apellidos = db.Column(db.String(100), nullable=False)
+    dni = db.Column(db.String(20))
+    telefono = db.Column(db.String(20))
+    email = db.Column(db.String(120))
+
+    contratos = db.relationship('Contrato', back_populates='inquilino')
+
+    def __repr__(self):
+        return f'<Inquilino {self.nombre} {self.apellidos}>'
+
+# ============================================
+# MODELO CONTRATO
+# ============================================
+class Contrato(db.Model):
+    __tablename__ = 'contratos'
+
+    id = db.Column(db.Integer, primary_key=True)
+    
+    propiedad_id = db.Column(db.Integer, db.ForeignKey('propiedades.id'), nullable=False)
+    inquilino_id = db.Column(db.Integer, db.ForeignKey('inquilinos.id'), nullable=False)
+
+    fecha_inicio = db.Column(db.Date, nullable=False)
+    fecha_fin = db.Column(db.Date)
+
+    renta_mensual = db.Column(db.Float, nullable=False)
+    fianza = db.Column(db.Float, default=0)
+
+    estado = db.Column(db.String(20), default='activo')
+
+    propiedad = db.relationship('Propiedad')
+    inquilino = db.relationship('Inquilino', back_populates='contratos')
+
+    def __repr__(self):
+        return f'<Contrato {self.id}>'
+
+# ============================================
+# MODELO RECIBO ALQUILER
+# ============================================
+class ReciboAlquiler(db.Model):
+    __tablename__ = 'recibos_alquiler'
+
+    id = db.Column(db.Integer, primary_key=True)
+
+    contrato_id = db.Column(db.Integer, db.ForeignKey('contratos.id'), nullable=False)
+
+    fecha_emision = db.Column(db.Date, nullable=False, default=datetime.utcnow)
+    periodo = db.Column(db.String(20), nullable=False)  # ej: 2026-03
+    concepto = db.Column(db.String(200), nullable=False, default='Alquiler mensual')
+
+    importe_base = db.Column(db.Float, nullable=False, default=0)
+    importe_agua = db.Column(db.Float, nullable=False, default=0)
+    importe_luz = db.Column(db.Float, nullable=False, default=0)
+    otros_importes = db.Column(db.Float, nullable=False, default=0)
+
+    total = db.Column(db.Float, nullable=False, default=0)
+
+    estado = db.Column(db.String(20), default='pendiente')  # pendiente, pagado, parcial
+    fecha_pago = db.Column(db.Date, nullable=True)
+    metodo_pago = db.Column(db.String(50), nullable=True)
+    observaciones = db.Column(db.Text)
+
+    contrato = db.relationship('Contrato', backref='recibos')
+
+    def calcular_total(self):
+        self.total = (
+            (self.importe_base or 0) +
+            (self.importe_agua or 0) +
+            (self.importe_luz or 0) +
+            (self.otros_importes or 0)
+        )
+        return self.total
+
+    def __repr__(self):
+        return f'<ReciboAlquiler {self.id} - {self.periodo}>'
+    cd 'alquiler'
+class Recibo(db.Model):
+    __tablename__ = "recibos"
+
+    id = db.Column(db.Integer, primary_key=True)
+    fecha_emision = db.Column(db.Date, nullable=False)
+    fecha_vencimiento = db.Column(db.Date, nullable=False)
+    importe_total = db.Column(db.Float, nullable=False)
+
+    estado = db.Column(db.String(20), nullable=False, default="pendiente")  
+    # pendiente / pagado / vencido
+
+    fecha_pago = db.Column(db.Date, nullable=True)
+
+    contrato_id = db.Column(db.Integer, db.ForeignKey("contratos.id"), nullable=False)
+
+    ingreso = db.relationship("Ingreso", back_populates="recibo", uselist=False)
+
+# ============================================
+# MODELO CONTADOR SUMINISTRO
+# ============================================
+class ContadorSuministro(db.Model):
+    __tablename__ = 'contadores_suministro'
+
+    id = db.Column(db.Integer, primary_key=True)
+    propiedad_id = db.Column(db.Integer, db.ForeignKey('propiedades.id'), nullable=False)
+
+    tipo = db.Column(db.String(20), nullable=False)  # agua, luz, gas
+    nombre = db.Column(db.String(100), nullable=False)
+    numero_serie = db.Column(db.String(100))
+    activo = db.Column(db.Boolean, default=True)
+
+    propiedad = db.relationship('Propiedad', backref='contadores')
+
+    def __repr__(self):
+        return f'<Contador {self.tipo} - {self.nombre}>'
+
+# ============================================
+# MODELO LECTURA CONTADOR
+# ============================================
+class LecturaContador(db.Model):
+    __tablename__ = 'lecturas_contador'
+
+    id = db.Column(db.Integer, primary_key=True)
+
+    contador_id = db.Column(db.Integer, db.ForeignKey('contadores_suministro.id'), nullable=False)
+    contrato_id = db.Column(db.Integer, db.ForeignKey('contratos.id'), nullable=True)
+
+    fecha_lectura = db.Column(db.Date, nullable=False, default=datetime.utcnow)
+    lectura_anterior = db.Column(db.Float, nullable=False, default=0)
+    lectura_actual = db.Column(db.Float, nullable=False, default=0)
+    consumo = db.Column(db.Float, nullable=False, default=0)
+
+    precio_unitario = db.Column(db.Float, nullable=False, default=0)
+    importe_total = db.Column(db.Float, nullable=False, default=0)
+
+    observaciones = db.Column(db.Text)
+
+    contador = db.relationship('ContadorSuministro', backref='lecturas')
+    contrato = db.relationship('Contrato', backref='lecturas_contador')
+
+    def calcular_consumo(self):
+        self.consumo = (self.lectura_actual or 0) - (self.lectura_anterior or 0)
+        if self.consumo < 0:
+            self.consumo = 0
+        self.importe_total = self.consumo * (self.precio_unitario or 0)
+        return self.importe_total
+
+    def __repr__(self):
+        return f'<LecturaContador {self.id}>'
+
+from datetime import date
+from flask_sqlalchemy import SQLAlchemy
+
+db = SQLAlchemy()
+
+
+class Ingreso(db.Model):
+    __tablename__ = "ingresos"
+
+    id = db.Column(db.Integer, primary_key=True)
+    fecha = db.Column(db.Date, nullable=False, default=date.today)
+    concepto = db.Column(db.String(255), nullable=False)
+    importe = db.Column(db.Float, nullable=False)
+    tipo = db.Column(db.String(50), nullable=False, default="alquiler")
+
+    # Relación opcional con recibo para trazabilidad
+    recibo_id = db.Column(db.Integer, db.ForeignKey("recibos.id"), nullable=True, unique=True)
+
+    creado_en = db.Column(db.DateTime, server_default=db.func.now())
+
+    recibo = db.relationship("Recibo", back_populates="ingreso")

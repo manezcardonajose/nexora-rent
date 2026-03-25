@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h2>Contrato #{{ contrato.id }}</h2>
+
+<div class="card mb-3">
+    <div class="card-body">
+        <p><strong>Propiedad:</strong> {{ contrato.propiedad.nombre }}</p>
+        <p><strong>Inquilino:</strong> {{ contrato.inquilino.nombre }} {{ contrato.inquilino.apellidos }}</p>
+        <p><strong>Fecha inicio:</strong> {{ contrato.fecha_inicio }}</p>
+        <p><strong>Fecha fin:</strong> {{ contrato.fecha_fin or 'Sin definir' }}</p>
+        <p><strong>Renta mensual:</strong> {{ contrato.renta_mensual }} €</p>
+        <p><strong>Fianza:</strong> {{ contrato.fianza }} €</p>
+        <p><strong>Estado:</strong> {{ contrato.estado }}</p>
+    </div>
+</div>
+
+<div class="mb-3">
+    <a href="{{ url_for('alquileres.nuevo_recibo', contrato_id=contrato.id) }}" class="btn btn-primary">
+        Generar recibo
+    </a>
+    <a href="{{ url_for('alquileres.index') }}" class="btn btn-secondary">
+        Volver
+    </a>
+</div>
+
+<h4>Recibos</h4>
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th>Período</th>
+            <th>Concepto</th>
+            <th>Total</th>
+            <th>Estado</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for r in contrato.recibos %}
+        <tr>
+            <td>{{ r.periodo }}</td>
+            <td>{{ r.concepto }}</td>
+            <td>{{ r.total }} €</td>
+            <td>{{ r.estado }}</td>
+        </tr>
+        {% else %}
+        <tr>
+            <td colspan="4">No hay recibos todavía</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% endblock %}

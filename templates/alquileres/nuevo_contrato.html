@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h2>Nuevo contrato</h2>
+
+<form method="POST">
+    <div class="mb-3">
+        <label class="form-label">Propiedad</label>
+        <select name="propiedad_id" class="form-control">
+            {% for p in propiedades %}
+            <option value="{{ p.id }}">{{ p.nombre }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Inquilino</label>
+        <select name="inquilino_id" class="form-control">
+            {% for i in inquilinos %}
+            <option value="{{ i.id }}">{{ i.nombre }} {{ i.apellidos }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Fecha inicio</label>
+        <input type="date" name="fecha_inicio" class="form-control">
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Fecha fin</label>
+        <input type="date" name="fecha_fin" class="form-control">
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Renta mensual</label>
+        <input type="number" step="0.01" name="renta_mensual" class="form-control">
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Fianza</label>
+        <input type="number" step="0.01" name="fianza" class="form-control">
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Estado</label>
+        <select name="estado" class="form-control">
+            <option value="activo">Activo</option>
+            <option value="finalizado">Finalizado</option>
+            <option value="rescindido">Rescindido</option>
+        </select>
+    </div>
+
+    <button class="btn btn-success">Guardar contrato</button>
+</form>
+
+{% endblock %}

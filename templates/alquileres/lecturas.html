@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h2>Lecturas de contadores</h2>
+
+<div class="mb-3">
+    <a href="{{ url_for('alquileres.nueva_lectura') }}" class="btn btn-primary">Nueva lectura</a>
+</div>
+
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Fecha</th>
+            <th>Contador</th>
+            <th>Contrato</th>
+            <th>Anterior</th>
+            <th>Actual</th>
+            <th>Consumo</th>
+            <th>Precio unitario</th>
+            <th>Total</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for l in lecturas %}
+        <tr>
+            <td>{{ l.id }}</td>
+            <td>{{ l.fecha_lectura }}</td>
+            <td>{{ l.contador.nombre }}</td>
+            <td>
+                {% if l.contrato %}
+                #{{ l.contrato.id }} - {{ l.contrato.inquilino.nombre }} {{ l.contrato.inquilino.apellidos }}
+                {% else %}
+                -
+                {% endif %}
+            </td>
+            <td>{{ l.lectura_anterior }}</td>
+            <td>{{ l.lectura_actual }}</td>
+            <td>{{ l.consumo }}</td>
+            <td>{{ l.precio_unitario }}</td>
+            <td>{{ l.importe_total }} €</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% endblock %}
