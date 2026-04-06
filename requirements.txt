@@ -3,6 +3,7 @@ gunicorn
 SQLAlchemy
 Flask-SQLAlchemy
 Flask-Login
+Flask-Mail
 python-dotenv
 Werkzeug
 Jinja2
