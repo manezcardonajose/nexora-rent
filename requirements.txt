@@ -1,15 +1,4 @@
-﻿Flask==2.3.3
-Flask-SQLAlchemy==3.1.1
-Flask-Login==0.6.2
-Flask-WTF==1.2.1
-Flask-Mail==0.9.1
-email-validator==2.1.0
-requests==2.31.0
-Werkzeug==2.3.7
-python-dotenv==1.0.0
-cffi==1.16.0
-icalendar==5.0.11
-weasyprint==60.2
 Flask
 gunicorn
 SQLAlchemy
+Flask-SQLAlchemy
