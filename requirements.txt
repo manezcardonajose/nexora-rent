@@ -2,3 +2,4 @@ Flask
 gunicorn
 SQLAlchemy
 Flask-SQLAlchemy
+python-dotenv
