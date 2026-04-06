@@ -1,0 +1,156 @@
+{% extends "base.html" %}
+{% block title %}Cobros vacacional{% endblock %}
+
+{% block content %}
+<div class="print-only mb-4">
+    <h2 style="margin:0;">NEXORA RENT</h2>
+    <p style="margin:0;">Informe de Cobros Vacacional</p>
+    <p style="margin:0;">Generado el {{ now().strftime("%d/%m/%Y") }}</p>
+    <hr>
+</div>
+
+<div class="container-fluid px-3 px-lg-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-4 no-print">
+        <div>
+            <h2 class="mb-1"><i class="bi bi-cash-coin"></i> Cobros vacacional</h2>
+            <p class="text-muted mb-0">Control de importes cobrados y pendientes por reserva</p>
+        </div>
+        {% include "informes/_acciones_informe.html" %}
+    </div>
+
+    <form method="GET" class="card shadow-sm mb-4 no-print">
+        <div class="card-body">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-3"><label class="form-label">Desde</label><input type="date" name="fecha_inicio" class="form-control" value="{{ fecha_inicio }}"></div>
+                <div class="col-md-3"><label class="form-label">Hasta</label><input type="date" name="fecha_fin" class="form-control" value="{{ fecha_fin }}"></div>
+                <div class="col-md-3">
+                    <label class="form-label">Estado</label>
+                    <select name="estado" class="form-select">
+                        <option value="">Todos</option>
+                        <option value="confirmada" {% if estado == 'confirmada' %}selected{% endif %}>Confirmada</option>
+                        <option value="pendiente" {% if estado == 'pendiente' %}selected{% endif %}>Pendiente</option>
+                        <option value="cancelada" {% if estado == 'cancelada' %}selected{% endif %}>Cancelada</option>
+                    </select>
+                </div>
+                <div class="col-md-3 d-grid"><button type="submit" class="btn btn-primary"><i class="bi bi-funnel"></i> Filtrar</button></div>
+            </div>
+        </div>
+    </form>
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-4 col-xl-4"><div class="kpi-box"><div>Total reservado</div><strong>{{ "%.2f"|format(total_reservado or 0) }} €</strong></div></div>
+        <div class="col-md-4 col-xl-4"><div class="kpi-box success"><div>Total cobrado</div><strong>{{ "%.2f"|format(total_cobrado or 0) }} €</strong></div></div>
+        <div class="col-md-4 col-xl-4"><div class="kpi-box warning"><div>Total pendiente</div><strong>{{ "%.2f"|format(total_pendiente or 0) }} €</strong></div></div>
+    </div>
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-warning text-dark">
+            <strong>Reservas con saldo pendiente</strong>
+        </div>
+        <div class="card-body">
+            {% if pendientes %}
+            <div class="table-responsive">
+                <table class="table table-bordered align-middle informe-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Propiedad</th>
+                            <th>Huésped</th>
+                            <th>Entrada</th>
+                            <th>Salida</th>
+                            <th class="text-end">Precio total</th>
+                            <th class="text-end">Cobrado</th>
+                            <th class="text-end">Pendiente</th>
+                            <th>Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for r in pendientes %}
+                        <tr>
+                            <td>#{{ r.id }}</td>
+                            <td>{{ r.propiedad.nombre if r.propiedad else '' }}</td>
+                            <td>{{ (r.huesped_nombre ~ ' ' ~ r.huesped_apellidos).strip() if r.huesped_nombre is defined else '' }}</td>
+                            <td>{{ r.fecha_entrada }}</td>
+                            <td>{{ r.fecha_salida }}</td>
+                            <td class="text-end">{{ "%.2f"|format(r.precio_total or 0) }} €</td>
+                            <td class="text-end">{{ "%.2f"|format(r.deposito_pagado or 0) }} €</td>
+                            <td class="text-end fw-bold text-warning">{{ "%.2f"|format(r.saldo_pendiente or 0) }} €</td>
+                            <td>{{ r.estado }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="alert alert-success mb-0">No hay reservas pendientes de cobro.</div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+            <strong>Todas las reservas</strong>
+            <a href="{{ request.path }}?{% for key, value in request.args.items() if key != 'formato' %}{% if not loop.first %}&{% endif %}{{ key }}={{ value|urlencode }}{% endfor %}{% if request.args %}&{% endif %}formato=csv" class="btn btn-sm btn-light no-print">
+                Exportar CSV
+            </a>
+        </div>
+        <div class="card-body">
+            {% if reservas %}
+            <div class="table-responsive">
+                <table class="table table-bordered align-middle informe-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Propiedad</th>
+                            <th>Huésped</th>
+                            <th>Entrada</th>
+                            <th>Salida</th>
+                            <th class="text-end">Precio total</th>
+                            <th class="text-end">Cobrado</th>
+                            <th class="text-end">Pendiente</th>
+                            <th>Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for r in reservas %}
+                        <tr>
+                            <td>#{{ r.id }}</td>
+                            <td>{{ r.propiedad.nombre if r.propiedad else '' }}</td>
+                            <td>{{ (r.huesped_nombre ~ ' ' ~ r.huesped_apellidos).strip() if r.huesped_nombre is defined else '' }}</td>
+                            <td>{{ r.fecha_entrada }}</td>
+                            <td>{{ r.fecha_salida }}</td>
+                            <td class="text-end">{{ "%.2f"|format(r.precio_total or 0) }} €</td>
+                            <td class="text-end">{{ "%.2f"|format(r.deposito_pagado or 0) }} €</td>
+                            <td class="text-end">{{ "%.2f"|format(r.saldo_pendiente or 0) }} €</td>
+                            <td>{{ r.estado }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="alert alert-info mb-0">No hay reservas para esos filtros.</div>
+            {% endif %}
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.kpi-box { background:#f8fafc; padding:12px; border-radius:10px; text-align:center; }
+.kpi-box strong { display:block; font-size:1.2rem; }
+.kpi-box.success { background:#e6f7ee; }
+.kpi-box.warning { background:#fff4e5; }
+.informe-table th { background:#f1f5f9; font-size:.82rem; text-transform:uppercase; }
+@media print {
+    body { font-size:11px; }
+    .kpi-box { border:1px solid #ddd; background:white !important; }
+    table { font-size:10px; }
+    thead { display:table-header-group; }
+    tr { page-break-inside:avoid; }
+}
+</style>
+{% endblock %}

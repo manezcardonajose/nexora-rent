@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4"> 
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h3>🔑 Gestión de licencias</h3>
+    </div>
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <form method="GET" class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label">Buscar usuario</label>
+                    <input type="text" name="q" class="form-control" value="{{ q }}" placeholder="usuario, email, nombre...">
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label">Plan</label>
+                    <select name="plan" class="form-select">
+                        <option value="">Todos</option>
+                        {% for plan_value, plan_text in plan_options %}
+                        <option value="{{ plan_value }}" {% if plan == plan_value %}selected{% endif %}>{{ plan_text }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label">Estado</label>
+                    <select name="estado" class="form-select">
+                        <option value="">Todos</option>
+                        <option value="activos" {% if estado == 'activos' %}selected{% endif %}>Activos</option>
+                        <option value="inactivos" {% if estado == 'inactivos' %}selected{% endif %}>Inactivos</option>
+                    </select>
+                </div>
+
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100">Filtrar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body table-responsive">
+            <table class="table table-striped align-middle">
+                <thead>
+                    <tr>
+                        <th>Usuario</th>
+                        <th>Email</th>
+                        <th>Plan</th>
+                        <th>Rol</th>
+                        <th>Propiedades</th>
+                        <th>Reservas</th>
+                        <th>Expira</th>
+                        <th>Estado</th>
+                        <th style="width: 380px;">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for u in usuarios %}
+                    <tr>
+                        <td>{{ u.username }}</td>
+                        <td>{{ u.email }}</td>
+                        <td>{{ u.plan_label() }}</td>
+                        <td>{{ u.rol or '-' }}</td>
+                        <td>{{ u.max_propiedades or 0 }}</td>
+                        <td>{{ u.max_reservas or 0 }}</td>
+                        <td>
+                            {% if u.plan_normalizado() == 'vitalicia' %}
+                                <span class="badge bg-success">Sin caducidad</span>
+                            {% elif u.licencia_expiracion %}
+                                {{ u.licencia_expiracion }}
+                                {% if u.licencia_expiracion < hoy %}
+                                    <span class="badge bg-danger ms-1">Caducada</span>
+                                {% endif %}
+                            {% else %}
+                                Sin fecha
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if u.activo %}
+                                {% if u.en_modo_restringido() %}
+                                    <span class="badge bg-warning text-dark">Restringido</span>
+                                {% else %}
+                                    <span class="badge bg-success">Activo</span>
+                                {% endif %}
+                            {% else %}
+                                <span class="badge bg-secondary">Inactivo</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="d-flex flex-wrap gap-1">
+                                <a href="{{ url_for('licencias.editar', id=u.id) }}" class="btn btn-sm btn-primary">Editar</a>
+
+                                <form method="POST" action="{{ url_for('licencias.aplicar_plan', id=u.id, plan='demo') }}">
+                                    <button type="submit" class="btn btn-sm btn-outline-warning">Demo</button>
+                                </form>
+
+                                <form method="POST" action="{{ url_for('licencias.aplicar_plan', id=u.id, plan='trial') }}">
+                                    <button type="submit" class="btn btn-sm btn-outline-info">Trial</button>
+                                </form>
+
+                                <form method="POST" action="{{ url_for('licencias.aplicar_plan', id=u.id, plan='activa') }}">
+                                    <button type="submit" class="btn btn-sm btn-outline-success">Activa</button>
+                                </form>
+
+                                <form method="POST" action="{{ url_for('licencias.aplicar_plan', id=u.id, plan='vitalicia') }}">
+                                    <button type="submit" class="btn btn-sm btn-outline-dark">Vitalicia</button>
+                                </form>
+
+                                <form method="POST" action="{{ url_for('licencias.renovar', id=u.id) }}">
+                                    <input type="hidden" name="dias" value="30">
+                                    <button type="submit" class="btn btn-sm btn-outline-secondary">+30 días</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="9" class="text-center text-muted">No hay usuarios.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1>{{ propiedad.nombre }}</h1>
+    <div>
+        <a href="{{ url_for('propiedades.editar', id=propiedad.id) }}" class="btn btn-warning">Editar</a>
+        <a href="{{ url_for('propiedades.index') }}" class="btn btn-secondary">Volver</a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card mb-3">
+            <div class="card-header">
+                <h5>Detalles</h5>
+            </div>
+            <div class="card-body">
+                <p><strong>Dirección:</strong> {{ propiedad.direccion }}, {{ propiedad.ciudad }}, {{ propiedad.codigo_postal }}, {{ propiedad.pais }}</p>
+                <p><strong>Habitaciones:</strong> {{ propiedad.num_habitaciones }} | <strong>Baños:</strong> {{ propiedad.num_banos }} | <strong>Capacidad:</strong> {{ propiedad.capacidad_max }} personas</p>
+                <p><strong>Precio:</strong> {{ propiedad.precio_noche }} {{ propiedad.moneda }} / noche</p>
+                <p><strong>Estado:</strong> {% if propiedad.activa %}<span class="badge bg-success">Activa</span>{% else %}<span class="badge bg-secondary">Inactiva</span>{% endif %}</p>
+                <p><strong>Fecha creación:</strong> {{ propiedad.fecha_creacion.strftime('%d/%m/%Y') }}</p>
+                <p><strong>Descripción:</strong> {{ propiedad.descripcion }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card mb-3">
+            <div class="card-header">
+                <h5>Próximas reservas</h5>
+            </div>
+            <div class="card-body">
+                {% set reservas_futuras = propiedad.reservas.filter(Reserva.fecha_salida >= now).order_by(Reserva.fecha_entrada).limit(5).all() %}
+                {% if reservas_futuras %}
+                <ul class="list-group">
+                    {% for r in reservas_futuras %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        {{ r.huesped_nombre }} - {{ r.fecha_entrada.strftime('%d/%m') }} a {{ r.fecha_salida.strftime('%d/%m') }}
+                        <span class="badge bg-{{ 'success' if r.estado == 'confirmada' else 'warning' }}">{{ r.estado }}</span>
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <p class="text-muted">No hay reservas próximas.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

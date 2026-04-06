@@ -1,0 +1,148 @@
+{% extends "base.html" %}
+{% block title %}Morosidad{% endblock %}
+
+{% block content %}
+<div class="print-only mb-4">
+    <h2 style="margin:0;">NEXORA RENT</h2>
+    <p style="margin:0;">Informe de Morosidad</p>
+    <p style="margin:0;">Generado el {{ now().strftime("%d/%m/%Y") }}</p>
+    <hr>
+</div>
+
+<div class="container-fluid px-3 px-lg-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-4 no-print">
+        <div>
+            <h2 class="mb-1"><i class="bi bi-exclamation-triangle"></i> Morosidad</h2>
+            <p class="text-muted mb-0">Control de deuda pendiente por inquilino y propiedad</p>
+        </div>
+        {% include "informes/_acciones_informe.html" %}
+    </div>
+
+    <form method="GET" class="card shadow-sm mb-4 no-print">
+        <div class="card-body">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-4">
+                    <label class="form-label">Propiedad</label>
+                    <select name="propiedad_id" class="form-select">
+                        <option value="">Todas</option>
+                        {% for propiedad in propiedades %}
+                        <option value="{{ propiedad.id }}" {% if propiedad_id == propiedad.id %}selected{% endif %}>
+                            {{ propiedad.nombre }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-md-4">
+                    <label class="form-label">Estado</label>
+                    <select name="estado" class="form-select">
+                        <option value="">Todos</option>
+                        <option value="pendiente" {% if estado == 'pendiente' %}selected{% endif %}>Pendiente</option>
+                        <option value="impagado" {% if estado == 'impagado' %}selected{% endif %}>Impagado</option>
+                        <option value="reclamado" {% if estado == 'reclamado' %}selected{% endif %}>Reclamado</option>
+                    </select>
+                </div>
+
+                <div class="col-md-4 d-grid">
+                    <button type="submit" class="btn btn-danger">Filtrar</button>
+                </div>
+            </div>
+        </div>
+    </form>
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="kpi-box danger">
+                <div>Deuda total</div>
+                <strong>{{ "%.2f"|format(total_deuda) }} €</strong>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="kpi-box warning">
+                <div>Deuda vencida</div>
+                <strong>{{ "%.2f"|format(total_vencido) }} €</strong>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="kpi-box">
+                <div>Aún no vencida</div>
+                <strong>{{ "%.2f"|format(total_no_vencido) }} €</strong>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            {% if recibos %}
+            <div class="table-responsive">
+                <table class="table table-bordered align-middle informe-table">
+                    <thead>
+                        <tr>
+                            <th>Número</th>
+                            <th>Inquilino</th>
+                            <th>Propiedad</th>
+                            <th>Emisión</th>
+                            <th>Vencimiento</th>
+                            <th>Estado</th>
+                            <th class="text-end">Importe</th>
+                            <th class="text-center">Días vencido</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for r in recibos %}
+                        {% set dias_vencido = (hoy - r.fecha_vencimiento).days if r.fecha_vencimiento and r.fecha_vencimiento < hoy else 0 %}
+                        <tr>
+                            <td>{{ r.numero or ('#' ~ r.id) }}</td>
+                            <td>{{ (r.inquilino.nombre ~ ' ' ~ (r.inquilino.apellidos or '')) if r.inquilino else '-' }}</td>
+                            <td>{{ r.propiedad.nombre if r.propiedad else '-' }}</td>
+                            <td>{{ r.fecha_emision or '-' }}</td>
+                            <td>{{ r.fecha_vencimiento or '-' }}</td>
+                            <td>{{ r.estado }}</td>
+                            <td class="text-end fw-bold">{{ "%.2f"|format(r.total or 0) }} €</td>
+                            <td class="text-center">{{ dias_vencido }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="alert alert-success mb-0">No hay morosidad registrada.</div>
+            {% endif %}
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.kpi-box {
+    background: #f8fafc;
+    padding: 12px;
+    border-radius: 10px;
+    text-align: center;
+}
+.kpi-box strong {
+    display: block;
+    font-size: 1.2rem;
+}
+.kpi-box.warning { background: #fff4e5; }
+.kpi-box.danger { background: #fdecec; }
+.informe-table th {
+    background: #f1f5f9;
+    font-size: 0.82rem;
+    text-transform: uppercase;
+}
+@media print {
+    body { font-size: 11px; }
+    .kpi-box {
+        border: 1px solid #ddd;
+        background: white !important;
+    }
+    table { font-size: 10px; }
+    thead { display: table-header-group; }
+    tr { page-break-inside: avoid; }
+}
+</style>
+{% endblock %}

@@ -1,0 +1,216 @@
+{% extends "base.html" %}
+{% block title %}Cobros{% endblock %}
+
+{% block content %}
+
+<!-- CABECERA SOLO PARA IMPRESIÓN -->
+<div class="print-only mb-4">
+    <h2 style="margin:0;">NEXORA RENT</h2>
+    <p style="margin:0;">Informe de Cobros</p>
+    <p style="margin:0;">Generado el {{ now().strftime("%d/%m/%Y") }}</p>
+    <hr>
+</div>
+
+<div class="container-fluid px-3 px-lg-4">
+
+    <!-- HEADER -->
+    <div class="d-flex justify-content-between align-items-center mb-4 no-print">
+        <div>
+            <h2 class="mb-1">
+                <i class="bi bi-cash-stack"></i> Cobros
+            </h2>
+            <p class="text-muted mb-0">
+                Seguimiento de emisión, cobro y estados de recibos
+            </p>
+        </div>
+
+        {% include "informes/_acciones_informe.html" %}
+    </div>
+
+    <!-- FILTROS -->
+    <form method="GET" class="card shadow-sm mb-4 no-print">
+        <div class="card-body">
+            <div class="row g-3 align-items-end">
+
+                <div class="col-md-3">
+                    <label class="form-label">Desde</label>
+                    <input type="date" name="fecha_inicio" class="form-control" value="{{ fecha_inicio }}">
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label">Hasta</label>
+                    <input type="date" name="fecha_fin" class="form-control" value="{{ fecha_fin }}">
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label">Estado</label>
+                    <select name="estado" class="form-select">
+                        <option value="">Todos</option>
+                        <option value="pendiente" {% if estado == 'pendiente' %}selected{% endif %}>Pendiente</option>
+                        <option value="pagado" {% if estado == 'pagado' %}selected{% endif %}>Pagado</option>
+                        <option value="impagado" {% if estado == 'impagado' %}selected{% endif %}>Impagado</option>
+                        <option value="reclamado" {% if estado == 'reclamado' %}selected{% endif %}>Reclamado</option>
+                    </select>
+                </div>
+
+                <div class="col-md-3 d-grid">
+                    <button type="submit" class="btn btn-primary">Filtrar</button>
+                </div>
+
+            </div>
+        </div>
+    </form>
+
+    <!-- RESUMEN -->
+    <div class="row g-3 mb-4">
+
+        <div class="col-md-4 col-xl-2">
+            <div class="kpi-box">
+                <div>Emitido</div>
+                <strong>{{ "%.2f"|format(total_emitido) }} €</strong>
+            </div>
+        </div>
+
+        <div class="col-md-4 col-xl-2">
+            <div class="kpi-box success">
+                <div>Cobrado</div>
+                <strong>{{ "%.2f"|format(total_cobrado) }} €</strong>
+            </div>
+        </div>
+
+        <div class="col-md-4 col-xl-2">
+            <div class="kpi-box warning">
+                <div>Pendiente</div>
+                <strong>{{ "%.2f"|format(total_pendiente) }} €</strong>
+            </div>
+        </div>
+
+        <div class="col-md-4 col-xl-2">
+            <div class="kpi-box danger">
+                <div>Impagado</div>
+                <strong>{{ "%.2f"|format(total_impagado) }} €</strong>
+            </div>
+        </div>
+
+        <div class="col-md-4 col-xl-2">
+            <div class="kpi-box dark">
+                <div>Reclamado</div>
+                <strong>{{ "%.2f"|format(total_reclamado) }} €</strong>
+            </div>
+        </div>
+
+        <div class="col-md-4 col-xl-2">
+            <div class="kpi-box info">
+                <div>Renta teórica</div>
+                <strong>{{ "%.2f"|format(renta_teorica_mensual) }} €</strong>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- TABLA -->
+    <div class="card">
+        <div class="card-body">
+
+            {% if recibos %}
+            <div class="table-responsive">
+                <table class="table table-bordered align-middle informe-table">
+
+                    <thead>
+                        <tr>
+                            <th>Nº</th>
+                            <th>Propiedad</th>
+                            <th>Inquilino</th>
+                            <th>Emisión</th>
+                            <th>Vencimiento</th>
+                            <th>Estado</th>
+                            <th>Método</th>
+                            <th class="text-end">Importe</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {% for r in recibos %}
+                        <tr>
+                            <td>{{ r.numero or ('#' ~ r.id) }}</td>
+                            <td>{{ r.propiedad.nombre if r.propiedad else '-' }}</td>
+                            <td>{{ (r.inquilino.nombre ~ ' ' ~ (r.inquilino.apellidos or '')) if r.inquilino else '-' }}</td>
+                            <td>{{ r.fecha_emision or '-' }}</td>
+                            <td>{{ r.fecha_vencimiento or '-' }}</td>
+                            <td>{{ r.estado }}</td>
+                            <td>{{ r.metodo_pago or '-' }}</td>
+                            <td class="text-end fw-bold">{{ "%.2f"|format(r.total or 0) }} €</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+
+                </table>
+            </div>
+            {% else %}
+            <div class="alert alert-info mb-0">
+                No hay recibos con esos filtros.
+            </div>
+            {% endif %}
+
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}
+
+{% block extra_css %}
+<style>
+
+.kpi-box {
+    background: #f8fafc;
+    padding: 12px;
+    border-radius: 10px;
+    text-align: center;
+    font-size: 0.9rem;
+}
+
+.kpi-box strong {
+    display: block;
+    font-size: 1.2rem;
+}
+
+.kpi-box.success { background:#e6f7ee; }
+.kpi-box.warning { background:#fff4e5; }
+.kpi-box.danger { background:#fdecec; }
+.kpi-box.dark { background:#eaeef5; }
+.kpi-box.info { background:#e6f0ff; }
+
+.informe-table th {
+    background: #f1f5f9;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+}
+
+@media print {
+
+    body {
+        font-size: 11px;
+    }
+
+    .kpi-box {
+        border: 1px solid #ddd;
+        background: white !important;
+    }
+
+    table {
+        font-size: 10px;
+    }
+
+    thead {
+        display: table-header-group;
+    }
+
+    tr {
+        page-break-inside: avoid;
+    }
+
+}
+
+</style>
+{% endblock %}

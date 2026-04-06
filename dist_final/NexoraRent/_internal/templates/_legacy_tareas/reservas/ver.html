@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="btn-group mb-3">
+    <a href="{{ url_for('reservas.editar', id=reserva.id) }}" class="btn btn-warning">
+        <i class="bi bi-pencil"></i> Editar
+    </a>
+    <a href="{{ url_for('huespedes.index', reserva_id=reserva.id) }}" class="btn btn-info">
+        <i class="bi bi-people"></i> Huéspedes ({{ reserva.huespedes.count() }}/{{ reserva.num_huespedes }})
+    </a>
+    <a href="{{ url_for('pagos.index', reserva_id=reserva.id) }}" class="btn btn-success">
+        <i class="bi bi-cash-coin"></i> Pagos ({{ reserva.pagos.count() }})
+    </a>
+    <a href="{{ url_for('reservas.pdf_reserva', id=reserva.id) }}" class="btn btn-primary">
+        <i class="bi bi-file-pdf"></i> PDF
+    </a>
+    <a href="{{ url_for('reservas.whatsapp_reserva', id=reserva.id) }}" class="btn btn-success">
+        <i class="bi bi-whatsapp"></i> WhatsApp
+    </a>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card mb-3">
+            <div class="card-header">
+                <h5>Detalles de la reserva</h5>
+            </div>
+            <div class="card-body">
+                <p><strong>Propiedad:</strong> <a href="{{ url_for('propiedades.ver', id=reserva.propiedad.id) }}">{{ reserva.propiedad.nombre }}</a></p>
+                <p><strong>Huésped:</strong> {{ reserva.huesped_nombre }}</p>
+                <p><strong>Email:</strong> {{ reserva.huesped_email or 'No especificado' }}</p>
+                <p><strong>Teléfono:</strong> {{ reserva.huesped_telefono or 'No especificado' }}</p>
+                <p><strong>Fechas:</strong> {{ reserva.fecha_entrada }} - {{ reserva.fecha_salida }} ({{ (reserva.fecha_salida - reserva.fecha_entrada).days }} noches)</p>
+                <p><strong>Huéspedes:</strong> {{ reserva.num_huespedes }}</p>
+                <p><strong>Precio total:</strong> {{ reserva.precio_total }} {{ reserva.propiedad.moneda }}</p>
+                <p>
+                    <strong>Estado:</strong>
+                    <span class="badge bg-{{ 'success' if reserva.estado == 'confirmada' else 'warning' if reserva.estado == 'pendiente' else 'danger' }}">
+                        {{ reserva.estado }}
+                    </span>
+                </p>
+                <p><strong>Origen:</strong> {{ reserva.origen }}</p>
+                {% if reserva.external_id %}
+                <p><strong>ID externo:</strong> {{ reserva.external_id }}</p>
+                {% endif %}
+                <p><strong>Notas:</strong> {{ reserva.notas or 'Sin notas' }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card mb-3">
+            <div class="card-header">
+                <h5>Tareas asociadas</h5>
+            </div>
+            <div class="card-body">
+                {% set tareas = reserva.tareas.all() %}
+                {% if tareas %}
+                <ul class="list-group">
+                    {% for t in tareas %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        {{ t.descripcion }}
+                        <span class="badge bg-{{ 'success' if t.completada else 'warning' }}">
+                            {{ 'Completada' if t.completada else 'Pendiente' }}
+                        </span>
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <p class="text-muted">No hay tareas asociadas.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

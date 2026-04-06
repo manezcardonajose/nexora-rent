@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+
+{% block title %}Mi perfil{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-3 px-lg-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1"><i class="bi bi-person-circle"></i> Mi perfil</h2>
+            <p class="text-muted mb-0">Datos de usuario registrados en el sistema</p>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <strong>Información de la cuenta</strong>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label class="form-label text-muted">Usuario</label>
+                    <div class="form-control bg-light">{{ current_user.username or '-' }}</div>
+                </div>
+
+                <div class="col-md-4 mb-3">
+                    <label class="form-label text-muted">Email</label>
+                    <div class="form-control bg-light">{{ current_user.email or '-' }}</div>
+                </div>
+
+                <div class="col-md-4 mb-3">
+                    <label class="form-label text-muted">Plan</label>
+                    <div class="form-control bg-light">{{ current_user.plan or '-' }}</div>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label class="form-label text-muted">Nombre</label>
+                    <div class="form-control bg-light">{{ current_user.nombre or '-' }}</div>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label class="form-label text-muted">Apellidos</label>
+                    <div class="form-control bg-light">{{ current_user.apellidos or '-' }}</div>
+                </div>
+
+                <div class="col-md-4 mb-3">
+                    <label class="form-label text-muted">Máximo de propiedades</label>
+                    <div class="form-control bg-light">{{ current_user.max_propiedades or 0 }}</div>
+                </div>
+
+                <div class="col-md-4 mb-3">
+                    <label class="form-label text-muted">Máximo de reservas</label>
+                    <div class="form-control bg-light">{{ current_user.max_reservas or 0 }}</div>
+                </div>
+
+                <div class="col-md-4 mb-3">
+                    <label class="form-label text-muted">Estado</label>
+                    <div class="form-control bg-light">
+                        {% if current_user.activo %}
+                        Activo
+                        {% else %}
+                        Inactivo
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label class="form-label text-muted">Fecha de registro</label>
+                    <div class="form-control bg-light">{{ current_user.fecha_registro or '-' }}</div>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label class="form-label text-muted">Licencia / expiración</label>
+                    <div class="form-control bg-light">{{ current_user.licencia_expiracion or 'Sin fecha' }}</div>
+                </div>
+            </div>
+                <div class="col-md-4 mb-3">
+                    <label class="form-label text-muted">Rol</label>
+                    <div class="form-control bg-light">{{ current_user.rol or '-' }}</div>
+            </div>
+
+            <div class="col-md-4 mb-3">
+                <label class="form-label text-muted">Administrador</label>
+                <div class="form-control bg-light">
+                    {% if current_user.puede_admin %}Sí{% else %}No{% endif %}
+                </div>
+            </div>
+
+            <div class="mt-3 d-flex gap-2">
+                <a href="{{ url_for('main.dashboard') }}" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left"></i> Volver al dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

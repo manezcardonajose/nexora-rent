@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block title %}Editar lectura{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card shadow-sm">
+        <div class="card-header bg-warning">
+            <h5 class="mb-0">Editar lectura</h5>
+        </div>
+        <div class="card-body">
+            <form method="POST">
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Contador</label>
+                        <select name="contador_id" class="form-select" required>
+                            {% for contador in contadores %}
+                            <option value="{{ contador.id }}" {% if lectura.contador_id == contador.id %}selected{% endif %}>
+                                {{ contador.nombre }} ({{ contador.tipo }})
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Contrato</label>
+                        <select name="contrato_id" class="form-select">
+                            <option value="">Sin contrato</option>
+                            {% for contrato in contratos %}
+                            <option value="{{ contrato.id }}" {% if lectura.contrato_id == contrato.id %}selected{% endif %}>
+                                #{{ contrato.id }} - {{ contrato.propiedad.nombre if contrato.propiedad else '-' }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Fecha lectura</label>
+                        <input type="date" name="fecha_lectura" class="form-control" value="{{ lectura.fecha_lectura }}">
+                    </div>
+
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label">Lectura anterior</label>
+                        <input type="number" step="0.01" name="lectura_anterior" class="form-control" value="{{ lectura.lectura_anterior }}">
+                    </div>
+
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label">Lectura actual</label>
+                        <input type="number" step="0.01" name="lectura_actual" class="form-control" value="{{ lectura.lectura_actual }}">
+                    </div>
+
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label">Precio unitario</label>
+                        <input type="number" step="0.001" name="precio_unitario" class="form-control" value="{{ lectura.precio_unitario }}">
+                    </div>
+
+                    <div class="col-md-12 mb-3">
+                        <label class="form-label">Observaciones</label>
+                        <textarea name="observaciones" class="form-control" rows="3">{{ lectura.observaciones or '' }}</textarea>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-between mt-3">
+                    <a href="{{ url_for('alquileres.ver_lectura', id=lectura.id) }}" class="btn btn-secondary">Volver</a>
+                    <button type="submit" class="btn btn-success">Guardar cambios</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

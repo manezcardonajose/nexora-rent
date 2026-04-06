@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}Resumen general larga duración{% endblock %}
+{% block content %}
+<div class="container-fluid px-3 px-lg-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div><h2 class="mb-1"><i class="bi bi-speedometer2"></i> Resumen general</h2><p class="text-muted mb-0">Vista global del módulo de larga duración</p></div>
+        {% include "informes/_acciones_informe.html" %}
+    </div>
+    <div class="row g-3 mb-4">
+        <div class="col-md-3 col-xl-2"><div class="card shadow-sm"><div class="card-body"><div class="small text-muted">Propiedades</div><div class="fs-4 fw-bold">{{ total_propiedades }}</div></div></div></div>
+        <div class="col-md-3 col-xl-2"><div class="card shadow-sm border-success"><div class="card-body"><div class="small text-muted">Contratos activos</div><div class="fs-4 fw-bold text-success">{{ contratos_activos }}</div></div></div></div>
+        <div class="col-md-3 col-xl-2"><div class="card shadow-sm"><div class="card-body"><div class="small text-muted">Finalizados</div><div class="fs-4 fw-bold">{{ contratos_finalizados }}</div></div></div></div>
+        <div class="col-md-3 col-xl-2"><div class="card shadow-sm"><div class="card-body"><div class="small text-muted">Cancelados</div><div class="fs-4 fw-bold">{{ contratos_cancelados }}</div></div></div></div>
+        <div class="col-md-3 col-xl-2"><div class="card shadow-sm border-warning"><div class="card-body"><div class="small text-muted">Vencen 30 días</div><div class="fs-4 fw-bold text-warning">{{ vencen_30 }}</div></div></div></div>
+        <div class="col-md-3 col-xl-2"><div class="card shadow-sm border-danger"><div class="card-body"><div class="small text-muted">Vencidos</div><div class="fs-4 fw-bold text-danger">{{ vencidos }}</div></div></div></div>
+    </div>
+    <div class="row g-3 mb-4">
+        <div class="col-md-4 col-xl-2"><div class="card shadow-sm"><div class="card-body"><div class="small text-muted">Renta mensual activa</div><div class="fs-5 fw-bold">{{ "%.2f"|format(renta_mensual_activa) }} €</div></div></div></div>
+        <div class="col-md-4 col-xl-2"><div class="card shadow-sm"><div class="card-body"><div class="small text-muted">Facturado</div><div class="fs-5 fw-bold">{{ "%.2f"|format(total_facturado) }} €</div></div></div></div>
+        <div class="col-md-4 col-xl-2"><div class="card shadow-sm border-success"><div class="card-body"><div class="small text-muted">Cobrado</div><div class="fs-5 fw-bold text-success">{{ "%.2f"|format(total_cobrado) }} €</div></div></div></div>
+        <div class="col-md-4 col-xl-2"><div class="card shadow-sm border-warning"><div class="card-body"><div class="small text-muted">Deuda total</div><div class="fs-5 fw-bold text-warning">{{ "%.2f"|format(deuda_total) }} €</div></div></div></div>
+        <div class="col-md-4 col-xl-2"><div class="card shadow-sm border-danger"><div class="card-body"><div class="small text-muted">Suministros</div><div class="fs-5 fw-bold text-danger">{{ "%.2f"|format(total_suministros) }} €</div></div></div></div>
+        <div class="col-md-4 col-xl-2"><div class="card shadow-sm border-info"><div class="card-body"><div class="small text-muted">Neto aprox.</div><div class="fs-5 fw-bold text-info">{{ "%.2f"|format(saldo_neto) }} €</div></div></div></div>
+    </div>
+    <div class="card shadow-sm"><div class="card-body">
+        {% if resumen_propiedades %}
+        <div class="table-responsive"><table class="table table-bordered table-hover align-middle">
+            <thead class="table-light"><tr><th>Propiedad</th><th class="text-center">Contratos activos</th><th class="text-end">Renta mensual</th><th class="text-end">Cobrado</th><th class="text-end">Deuda</th><th class="text-end">Suministros</th><th class="text-end">Neto aprox.</th></tr></thead>
+            <tbody>{% for item in resumen_propiedades %}<tr><td>{{ item.propiedad.nombre }}</td><td class="text-center">{{ item.contratos_activos }}</td><td class="text-end">{{ "%.2f"|format(item.renta_mensual) }} €</td><td class="text-end">{{ "%.2f"|format(item.cobrado) }} €</td><td class="text-end">{{ "%.2f"|format(item.deuda) }} €</td><td class="text-end"> {{ "%.2f"|format(item.gastos_reales) }}€</td><td class="text-end fw-semibold">{{ "%.2f"|format(item.neto) }} €</td></tr>{% endfor %}</tbody>
+        </table></div>
+        {% else %}<div class="alert alert-info mb-0">No hay datos para mostrar.</div>{% endif %}
+    </div></div>
+</div>
+{% endblock %}

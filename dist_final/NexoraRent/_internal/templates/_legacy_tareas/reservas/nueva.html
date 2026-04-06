@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h4>Nueva reserva</h4>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="">
+                    {{ form.hidden_tag() }}
+                    <div class="mb-3">
+                        {{ form.propiedad_id.label(class="form-label") }}
+                        {{ form.propiedad_id(class="form-select") }}
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            {{ form.huesped_nombre.label(class="form-label") }}
+                            {{ form.huesped_nombre(class="form-control") }}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            {{ form.huesped_email.label(class="form-label") }}
+                            {{ form.huesped_email(class="form-control") }}
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            {{ form.huesped_telefono.label(class="form-label") }}
+                            {{ form.huesped_telefono(class="form-control") }}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            {{ form.num_huespedes.label(class="form-label") }}
+                            {{ form.num_huespedes(class="form-control", type="number") }}
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            {{ form.fecha_entrada.label(class="form-label") }}
+                            {{ form.fecha_entrada(class="form-control", type="date") }}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            {{ form.fecha_salida.label(class="form-label") }}
+                            {{ form.fecha_salida(class="form-control", type="date") }}
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            {{ form.precio_total.label(class="form-label") }}
+                            {{ form.precio_total(class="form-control", type="number", step="0.01") }}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            {{ form.estado.label(class="form-label") }}
+                            {{ form.estado(class="form-select") }}
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            {{ form.origen.label(class="form-label") }}
+                            {{ form.origen(class="form-select") }}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            {{ form.external_id.label(class="form-label") }}
+                            {{ form.external_id(class="form-control") }}
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        {{ form.notas.label(class="form-label") }}
+                        {{ form.notas(class="form-control", rows=3) }}
+                    </div>
+                    <button type="submit" class="btn btn-primary">Guardar</button>
+                    <a href="{{ url_for('reservas.index') }}" class="btn btn-secondary">Cancelar</a>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

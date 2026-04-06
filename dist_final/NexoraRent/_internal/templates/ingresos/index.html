@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1>Ingresos</h1>
+    <a href="{{ url_for('ingresos.nuevo') }}" class="btn btn-success">
+        <i class="bi bi-plus-circle"></i> Nuevo ingreso
+    </a>
+</div>
+
+<!-- Filtros rápidos (opcional) -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="GET" action="{{ url_for('ingresos.index') }}" class="row g-3">
+            <div class="col-md-3">
+                <label for="propiedad" class="form-label">Propiedad</label>
+                <select name="propiedad" id="propiedad" class="form-select">
+                    <option value="">Todas</option>
+                    {% for p in propiedades %}
+                        <option value="{{ p.id }}" {% if request.args.get('propiedad')|int == p.id %}selected{% endif %}>{{ p.nombre }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label for="metodo_pago" class="form-label">Método de pago</label>
+                <select name="metodo_pago" id="metodo_pago" class="form-select">
+                    <option value="">Todos</option>
+                    <option value="transferencia" {% if request.args.get('metodo_pago') == 'transferencia' %}selected{% endif %}>Transferencia</option>
+                    <option value="visa" {% if request.args.get('metodo_pago') == 'visa' %}selected{% endif %}>Visa</option>
+                    <option value="bizum" {% if request.args.get('metodo_pago') == 'bizum' %}selected{% endif %}>Bizum</option>
+                    <option value="efectivo" {% if request.args.get('metodo_pago') == 'efectivo' %}selected{% endif %}>Efectivo</option>
+                    <option value="paypal" {% if request.args.get('metodo_pago') == 'paypal' %}selected{% endif %}>PayPal</option>
+                    <option value="otro" {% if request.args.get('metodo_pago') == 'otro' %}selected{% endif %}>Otro</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label for="fecha_desde" class="form-label">Desde</label>
+                <input type="date" class="form-control" id="fecha_desde" name="fecha_desde" value="{{ request.args.get('fecha_desde', '') }}">
+            </div>
+            <div class="col-md-2">
+                <label for="fecha_hasta" class="form-label">Hasta</label>
+                <input type="date" class="form-control" id="fecha_hasta" name="fecha_hasta" value="{{ request.args.get('fecha_hasta', '') }}">
+            </div>
+            <div class="col-md-3 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary me-2">Filtrar</button>
+                <a href="{{ url_for('ingresos.index') }}" class="btn btn-secondary">Limpiar</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Totales -->
+<div class="row mb-3">
+    <div class="col-md-4">
+        <div class="card text-white bg-success">
+            <div class="card-body">
+                <h5 class="card-title">Total ingresos (filtro)</h5>
+                <p class="card-text display-6">{{ total_filtro|default(0)|round(2) }} €</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-white bg-info">
+            <div class="card-body">
+                <h5 class="card-title">Total general</h5>
+                <p class="card-text display-6">{{ total_general|round(2) }} €</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Tabla de ingresos -->
+{% if ingresos %}
+    <div class="table-responsive">
+        <table class="table table-striped table-hover">
+            <thead>
+                <tr>
+                    <th>Fecha</th>
+                    <th>Propiedad</th>
+                    <th>Concepto</th>
+                    <th>Método</th>
+                    <th>Monto</th>
+                    <th>Reserva asociada</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for ingreso in ingresos %}
+                <tr>
+                    <td>{{ ingreso.fecha.strftime('%d/%m/%Y') }}</td>
+                    <td>{{ ingreso.propiedad.nombre if ingreso.propiedad else 'N/A' }}</td>
+                    <td>{{ ingreso.concepto }}</td>
+                    <td>
+                        <span class="badge bg-secondary">{{ ingreso.metodo_pago }}</span>
+                    </td>
+                    <td><strong>{{ ingreso.monto }} {{ ingreso.moneda or '€' }}</strong></td>
+                    <td>
+                        {% if ingreso.reserva_id %}
+                            <a href="{{ url_for('reservas.ver', id=ingreso.reserva_id) }}">#{{ ingreso.reserva_id }}</a>
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                    <td>
+                        <a href="{{ url_for('ingresos.ver', id=ingreso.id) }}" class="btn btn-sm btn-primary">Ver</a>
+                        <a href="{{ url_for('ingresos.editar', id=ingreso.id) }}" class="btn btn-sm btn-warning">Editar</a>
+                        <form action="{{ url_for('ingresos.eliminar', id=ingreso.id) }}" method="POST" class="d-inline">
+                            <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('¿Eliminar este ingreso?')">Eliminar</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% else %}
+    <p class="text-muted">No hay ingresos registrados.</p>
+{% endif %}
+{% endblock %}

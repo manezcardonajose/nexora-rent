@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}Suministros{% endblock %}
+{% block content %}
+<div class="print-only mb-3">
+    <h2>NEXORA RENT</h2>
+    <p>Informe generado el {{ now().strftime("%d/%m/%Y") }}</p>
+    <hr>
+</div>ock content %}
+<div class="print-only mb-3">
+    <h2>NEXORA RENT</h2>
+    <p>Informe generado el {{ now().strftime("%d/%m/%Y") }}</p>
+    <hr>
+</div>
+
+<div class="container-fluid px-3 px-lg-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div><h2 class="mb-1"><i class="bi bi-lightning-charge"></i> Suministros</h2><p class="text-muted mb-0">Consumos y costes por propiedad y contrato</p></div>
+        {% include "informes/_acciones_informe.html" %}
+    </div>
+    <form method="GET" class="card shadow-sm mb-4 no-print"><div class="card-body"><div class="row g-3 align-items-end">
+        <div class="col-md-4"><label class="form-label">Propiedad</label><select name="propiedad_id" class="form-select"><option value="">Todas</option>{% for propiedad in propiedades %}<option value="{{ propiedad.id }}" {% if propiedad_id == propiedad.id %}selected{% endif %}>{{ propiedad.nombre }}</option>{% endfor %}</select></div>
+        <div class="col-md-4"><label class="form-label">Contrato</label><select name="contrato_id" class="form-select"><option value="">Todos</option>{% for contrato in contratos %}<option value="{{ contrato.id }}" {% if contrato_id == contrato.id %}selected{% endif %}>#{{ contrato.id }} - {{ contrato.propiedad.nombre if contrato.propiedad else '-' }}</option>{% endfor %}</select></div>
+        <div class="col-md-2"><label class="form-label">Tipo</label><select name="tipo" class="form-select"><option value="">Todos</option><option value="agua" {% if tipo == 'agua' %}selected{% endif %}>Agua</option><option value="luz" {% if tipo == 'luz' %}selected{% endif %}>Luz</option><option value="gas" {% if tipo == 'gas' %}selected{% endif %}>Gas</option><option value="otro" {% if tipo == 'otro' %}selected{% endif %}>Otro</option></select></div>
+        <div class="col-md-2 d-grid"><button type="submit" class="btn btn-primary">Filtrar</button></div>
+    </div></div></form>
+    <div class="row g-3 mb-4">
+        <div class="col-md-4 col-xl-2"><div class="card shadow-sm"><div class="card-body"><div class="small text-muted">Consumo total</div><div class="fs-5 fw-bold">{{ "%.2f"|format(total_consumo) }}</div></div></div></div>
+        <div class="col-md-4 col-xl-2"><div class="card shadow-sm border-danger"><div class="card-body"><div class="small text-muted">Coste total</div><div class="fs-5 fw-bold text-danger">{{ "%.2f"|format(total_importe) }} €</div></div></div></div>
+        <div class="col-md-4 col-xl-2"><div class="card shadow-sm"><div class="card-body"><div class="small text-muted">Agua</div><div class="fs-5 fw-bold">{{ "%.2f"|format(total_agua) }} €</div></div></div></div>
+        <div class="col-md-4 col-xl-2"><div class="card shadow-sm"><div class="card-body"><div class="small text-muted">Luz</div><div class="fs-5 fw-bold">{{ "%.2f"|format(total_luz) }} €</div></div></div></div>
+        <div class="col-md-4 col-xl-2"><div class="card shadow-sm"><div class="card-body"><div class="small text-muted">Gas</div><div class="fs-5 fw-bold">{{ "%.2f"|format(total_gas) }} €</div></div></div></div>
+        <div class="col-md-4 col-xl-2"><div class="card shadow-sm"><div class="card-body"><div class="small text-muted">Otro</div><div class="fs-5 fw-bold">{{ "%.2f"|format(total_otro) }} €</div></div></div></div>
+    </div>
+    <div class="card shadow-sm"><div class="card-body">
+        {% if lecturas %}
+        <div class="table-responsive"><table class="table table-bordered table-hover align-middle">
+            <thead class="table-light"><tr><th>Fecha</th><th>Contador</th><th>Tipo</th><th>Propiedad</th><th>Contrato</th><th class="text-end">Anterior</th><th class="text-end">Actual</th><th class="text-end">Consumo</th><th class="text-end">Precio</th><th class="text-end">Importe</th></tr></thead>
+            <tbody>{% for l in lecturas %}<tr><td>{{ l.fecha_lectura }}</td><td>{{ l.contador.nombre if l.contador else '-' }}</td><td>{{ l.contador.tipo|capitalize if l.contador else '-' }}</td><td>{{ l.contador.propiedad.nombre if l.contador and l.contador.propiedad else '-' }}</td><td>{{ ('#' ~ l.contrato.id) if l.contrato else 'Sin contrato' }}</td><td class="text-end">{{ "%.2f"|format(l.lectura_anterior or 0) }}</td><td class="text-end">{{ "%.2f"|format(l.lectura_actual or 0) }}</td><td class="text-end">{{ "%.2f"|format(l.consumo or 0) }}</td><td class="text-end">{{ "%.2f"|format(l.precio_unitario or 0) }} €</td><td class="text-end fw-semibold">{{ "%.2f"|format(l.importe_total or 0) }} €</td></tr>{% endfor %}</tbody>
+        </table></div>
+        {% else %}<div class="alert alert-info mb-0">No hay lecturas para esos filtros.</div>{% endif %}
+    </div></div>
+</div>
+{% endblock %}

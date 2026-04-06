@@ -1,0 +1,332 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+        <div>
+            <h1 class="h3 mb-1">IA Nexora Rent</h1>
+            <p class="text-muted mb-0">Analiza, detecta y sugiere. No modifica datos.</p>
+        </div>
+        <form method="post" class="d-flex gap-2" style="min-width: 320px; max-width: 640px; width: 100%;">
+            <input type="text" name="consulta" value="{{ consulta or '' }}" class="form-control" placeholder="Pregunta algo: resumen, alertas, ocupación, rentabilidad...">
+            <button type="submit" class="btn btn-primary">Consultar</button>
+        </form>
+    </div>
+
+    {% if respuesta %}
+    <div class="alert alert-info border-0 shadow-sm mb-4">
+        <strong>Respuesta IA:</strong> {{ respuesta }}
+    </div>
+    {% endif %}
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-6 col-xl-3">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <div class="text-muted small mb-1">Beneficio del mes</div>
+                    <div class="display-6 fw-bold">{{ '%.2f'|format(resumen.get('beneficio_mes', 0)) }} €</div>
+                    <div class="small text-muted mt-2">
+                        Ingresos {{ '%.2f'|format(resumen.get('ingresos_mes', 0)) }} € · Gastos {{ '%.2f'|format(resumen.get('gastos_mes', 0)) }} €
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 col-xl-3">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <div class="text-muted small mb-1">Ocupación prevista 30 días</div>
+                    <div class="display-6 fw-bold">{{ '%.2f'|format(ocupacion.get('global', {}).get('porcentaje_mes', 0)) }}%</div>
+                    <div class="small mt-2">
+                        Tendencia <strong>{{ ocupacion.get('global', {}).get('tendencia', 'estable') }}</strong> · Confianza <strong>{{ ocupacion.get('global', {}).get('confianza', 'baja') }}</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 col-xl-3">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <div class="text-muted small mb-1">Alertas</div>
+                    <div class="display-6 fw-bold">{{ alertas.get('conteos', {}).get('total', 0) }}</div>
+                    <div class="small text-muted mt-2">
+                        {{ alertas.get('principal') or 'Sin alertas críticas por ahora.' }}
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 col-xl-3">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <div class="text-muted small mb-1">Operativa actual</div>
+                    <div class="display-6 fw-bold">{{ resumen.get('reservas_activas', 0) }}</div>
+                    <div class="small text-muted mt-2">
+                        Reservas activas · {{ resumen.get('tareas_pendientes', 0) }} tareas pendientes
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-xl-8">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-white">
+                    <strong>Resumen IA</strong>
+                </div>
+                <div class="card-body">
+                    <p class="mb-2">{{ ocupacion.get('global', {}).get('explicacion', 'Sin explicación disponible.') }}</p>
+                    <p class="mb-2">{{ rentabilidad.get('explicacion', 'Sin explicación disponible.') }}</p>
+                    {% if alertas.get('principal') %}
+                    <div class="alert alert-warning mb-0">{{ alertas.get('principal') }}</div>
+                    {% else %}
+                    <div class="alert alert-success mb-0">No hay alertas principales en este momento.</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-white">
+                    <strong>Recomendaciones IA</strong>
+                </div>
+                <div class="card-body">
+                    {% if recomendaciones %}
+                    <ul class="mb-0 ps-3">
+                        {% for item in recomendaciones %}
+                        <li class="mb-2">{{ item }}</li>
+                        {% endfor %}
+                    </ul>
+                    {% else %}
+                    <div class="text-muted">Sin recomendaciones por ahora.</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-lg-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-white"><strong>Alertas detalladas</strong></div>
+                <div class="card-body">
+                    <div class="row g-2 mb-3">
+                        <div class="col-6"><span class="badge bg-danger-subtle text-danger">Ingreso sin gasto: {{ alertas.get('conteos', {}).get('ingreso_sin_gasto', 0) }}</span></div>
+                        <div class="col-6"><span class="badge bg-warning-subtle text-warning-emphasis">Margen bajo: {{ alertas.get('conteos', {}).get('margen_bajo', 0) }}</span></div>
+                        <div class="col-6"><span class="badge bg-secondary-subtle text-secondary">Tareas vencidas: {{ alertas.get('conteos', {}).get('tareas_vencidas', 0) }}</span></div>
+                        <div class="col-6"><span class="badge bg-info-subtle text-info-emphasis">Contratos a vencer: {{ alertas.get('conteos', {}).get('contratos_vencer', 0) }}</span></div>
+                    </div>
+
+                    {% if alertas.get('items') %}
+                    <ul class="mb-0 ps-3">
+                        {% for item in alertas.get('items', []) %}
+                        <li class="mb-2">{{ item.texto }}</li>
+                        {% endfor %}
+                    </ul>
+                    {% else %}
+                    <div class="text-muted">Sin alertas activas.</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-white"><strong>Rentabilidad actual</strong></div>
+                <div class="card-body">
+                    <div class="row text-center g-3">
+                        <div class="col-md-4">
+                            <div class="small text-muted">Ingresos</div>
+                            <div class="fs-4 fw-semibold">{{ '%.2f'|format(rentabilidad.get('ingresos', 0)) }} €</div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="small text-muted">Gastos</div>
+                            <div class="fs-4 fw-semibold">{{ '%.2f'|format(rentabilidad.get('gastos', 0)) }} €</div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="small text-muted">Margen</div>
+                            <div class="fs-4 fw-semibold">{{ '%.2f'|format(rentabilidad.get('margen', 0)) }}%</div>
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="small">Tendencia <strong>{{ rentabilidad.get('tendencia', 'estable') }}</strong> · Confianza <strong>{{ rentabilidad.get('confianza', 'baja') }}</strong></div>
+                    <div class="text-muted mt-2">{{ rentabilidad.get('explicacion', '') }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-white"><strong>Ocupación y sugerencias de precio por propiedad</strong></div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Propiedad</th>
+                            <th class="text-end">Ocupación 30 días</th>
+                            <th class="text-end">Precio actual</th>
+                            <th class="text-end">Histórico</th>
+                            <th class="text-end">Sugerido</th>
+                            <th>Confianza</th>
+                            <th>Observación</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in ocupacion.get('propiedades', []) %}
+                        <tr>
+                            <td>
+                                <div class="fw-semibold">{{ item.propiedad }}</div>
+                                <div class="small text-muted">{{ item.reservas_futuras }} reservas futuras · {{ item.dias_ocupados }}/{{ item.dias_periodo }} días</div>
+                            </td>
+                            <td class="text-end">{{ '%.2f'|format(item.porcentaje_mes) }}%</td>
+                            <td class="text-end">{{ '%.2f'|format(item.precio_actual) }} €</td>
+                            <td class="text-end">{{ '%.2f'|format(item.precio_historico) }} €</td>
+                            <td class="text-end">{{ '%.2f'|format(item.precio_sugerido) }} €</td>
+                            <td>{{ item.confianza }}</td>
+                            <td>
+                                <div>{{ item.observacion_precio }}</div>
+                                {% if item.huecos %}
+                                <div class="small text-muted mt-1">Huecos detectados: {{ item.huecos|length }}</div>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="7" class="text-center text-muted py-4">No hay propiedades visibles para analizar.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-xl-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-white"><strong>Ranking propiedades por beneficio</strong></div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-sm mb-0 align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Propiedad</th>
+                                    <th class="text-end">Beneficio</th>
+                                    <th class="text-end">Ingresos mes</th>
+                                    <th class="text-end">Gastos mes</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in ranking.get('propiedades_beneficio', []) %}
+                                <tr>
+                                    <td>{{ item.propiedad }}</td>
+                                    <td class="text-end">{{ '%.2f'|format(item.beneficio) }} €</td>
+                                    <td class="text-end">{{ '%.2f'|format(item.ingresos_mes) }} €</td>
+                                    <td class="text-end">{{ '%.2f'|format(item.gastos_mes) }} €</td>
+                                </tr>
+                                {% else %}
+                                <tr><td colspan="4" class="text-center text-muted py-4">Sin datos de ranking.</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-white"><strong>Ranking propiedades por gasto</strong></div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-sm mb-0 align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Propiedad</th>
+                                    <th class="text-end">Gastos mes</th>
+                                    <th class="text-end">Ingresos mes</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in ranking.get('propiedades_gasto', []) %}
+                                <tr>
+                                    <td>{{ item.propiedad }}</td>
+                                    <td class="text-end">{{ '%.2f'|format(item.gastos_mes) }} €</td>
+                                    <td class="text-end">{{ '%.2f'|format(item.ingresos_mes) }} €</td>
+                                </tr>
+                                {% else %}
+                                <tr><td colspan="3" class="text-center text-muted py-4">Sin datos de ranking.</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-xl-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-white"><strong>Reservas más rentables</strong></div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-sm mb-0 align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Propiedad</th>
+                                    <th class="text-end">Ingresos</th>
+                                    <th class="text-end">Coste est.</th>
+                                    <th class="text-end">Beneficio</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in ranking.get('reservas_top', []) %}
+                                <tr>
+                                    <td>#{{ item.reserva_id }}</td>
+                                    <td>{{ item.propiedad_nombre }}</td>
+                                    <td class="text-end">{{ '%.2f'|format(item.ingresos) }} €</td>
+                                    <td class="text-end">{{ '%.2f'|format(item.gasto_estimado) }} €</td>
+                                    <td class="text-end">{{ '%.2f'|format(item.beneficio) }} €</td>
+                                </tr>
+                                {% else %}
+                                <tr><td colspan="5" class="text-center text-muted py-4">Sin reservas para analizar.</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-white"><strong>Reservas con peor beneficio</strong></div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-sm mb-0 align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Propiedad</th>
+                                    <th class="text-end">Ingresos</th>
+                                    <th class="text-end">Coste est.</th>
+                                    <th class="text-end">Beneficio</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in ranking.get('reservas_peor', []) %}
+                                <tr>
+                                    <td>#{{ item.reserva_id }}</td>
+                                    <td>{{ item.propiedad_nombre }}</td>
+                                    <td class="text-end">{{ '%.2f'|format(item.ingresos) }} €</td>
+                                    <td class="text-end">{{ '%.2f'|format(item.gasto_estimado) }} €</td>
+                                    <td class="text-end">{{ '%.2f'|format(item.beneficio) }} €</td>
+                                </tr>
+                                {% else %}
+                                <tr><td colspan="5" class="text-center text-muted py-4">Sin reservas para analizar.</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

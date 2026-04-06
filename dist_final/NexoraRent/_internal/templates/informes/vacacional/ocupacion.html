@@ -1,0 +1,207 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="print-only mb-3">
+    <h2>NEXORA RENT</h2>
+    <p>Informe generado el {{ now().strftime("%d/%m/%Y") }}</p>
+    <hr>
+</div>
+
+{% include "informes/_acciones_informe.html" %}
+<div class="container mt-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1"><i class="bi bi-building-check"></i> Ocupación vacacional</h2>
+            <p class="text-muted mb-0">Análisis de noches ocupadas y porcentaje de ocupación</p>
+        </div>
+    </div>
+
+    <form method="GET" class="card shadow-sm mb-4">
+        <div class="card-body">
+            <div class="row g-3 align-items-end">
+
+                <div class="col-md-3">
+                    <label class="form-label">Desde</label>
+                    <input type="date" name="fecha_inicio" class="form-control" value="{{ fecha_inicio }}">
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label">Hasta</label>
+                    <input type="date" name="fecha_fin" class="form-control" value="{{ fecha_fin }}">
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label">Estado</label>
+                    <select name="estado" class="form-select">
+                        <option value="">Todos</option>
+                        <option value="confirmada" {% if estado == 'confirmada' %}selected{% endif %}>Confirmada</option>
+                        <option value="pendiente" {% if estado == 'pendiente' %}selected{% endif %}>Pendiente</option>
+                        <option value="cancelada" {% if estado == 'cancelada' %}selected{% endif %}>Cancelada</option>
+                    </select>
+                </div>
+
+                <div class="col-md-3 d-grid">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-funnel"></i> Filtrar
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </form>
+
+    <div class="row g-3 mb-4">
+
+        <div class="col-md-4 col-xl-2">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <div class="small text-muted">Propiedades</div>
+                    <div class="fs-4 fw-bold">{{ total_propiedades }}</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 col-xl-2">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <div class="small text-muted">Días periodo</div>
+                    <div class="fs-4 fw-bold">{{ dias_periodo }}</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 col-xl-2">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <div class="small text-muted">Noches disponibles</div>
+                    <div class="fs-4 fw-bold">{{ noches_disponibles }}</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 col-xl-2">
+            <div class="card shadow-sm border-primary">
+                <div class="card-body">
+                    <div class="small text-muted">Noches ocupadas</div>
+                    <div class="fs-4 fw-bold text-primary">{{ noches_ocupadas }}</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 col-xl-2">
+            <div class="card shadow-sm border-success">
+                <div class="card-body">
+                    <div class="small text-muted">% ocupación</div>
+                    <div class="fs-4 fw-bold text-success">{{ "%.2f"|format(porcentaje_ocupacion) }}%</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 col-xl-1">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <div class="small text-muted">Entradas</div>
+                    <div class="fs-5 fw-bold">{{ entradas }}</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 col-xl-1">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <div class="small text-muted">Salidas</div>
+                    <div class="fs-5 fw-bold">{{ salidas }}</div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+            <strong>Ocupación por propiedad</strong>
+            <a href="{{ request.path }}?{% for key, value in request.args.items() if key != 'formato' %}{% if not loop.first %}&{% endif %}{{ key }}={{ value|urlencode }}{% endfor %}{% if request.args %}&{% endif %}formato=csv"
+               class="btn btn-sm btn-light">
+                Exportar CSV
+            </a>
+        </div>
+
+        <div class="card-body">
+            {% if detalle_propiedades %}
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Propiedad</th>
+                            <th class="text-end">Noches ocupadas</th>
+                            <th class="text-end">Noches disponibles</th>
+                            <th class="text-end">% ocupación</th>
+                            <th class="text-end">Reservas</th>
+                            <th class="text-end">Ingresos</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in detalle_propiedades %}
+                        <tr>
+                            <td>{{ item.nombre }}</td>
+                            <td class="text-end">{{ item.noches_ocupadas }}</td>
+                            <td class="text-end">{{ item.noches_disponibles }}</td>
+                            <td class="text-end fw-semibold">{{ "%.2f"|format(item.ocupacion) }}%</td>
+                            <td class="text-end">{{ item.reservas }}</td>
+                            <td class="text-end">{{ "%.2f"|format(item.ingresos) }} €</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="alert alert-info mb-0">No hay datos de ocupación para ese rango.</div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <strong>Reservas consideradas</strong>
+        </div>
+        <div class="card-body">
+            {% if reservas_validas %}
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>ID</th>
+                            <th>Propiedad</th>
+                            <th>Huésped</th>
+                            <th>Entrada</th>
+                            <th>Salida</th>
+                            <th class="text-end">Noches</th>
+                            <th class="text-end">Precio</th>
+                            <th>Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for r in reservas_validas %}
+                        <tr>
+                            <td>#{{ r.id }}</td>
+                            <td>{{ r.propiedad.nombre if r.propiedad else '' }}</td>
+                            <td>{{ (r.huesped_nombre ~ ' ' ~ r.huesped_apellidos).strip() if r.huesped_nombre is defined else '' }}</td>
+                            <td>{{ r.fecha_entrada }}</td>
+                            <td>{{ r.fecha_salida }}</td>
+                            <td class="text-end">{{ (r.fecha_salida - r.fecha_entrada).days }}</td>
+                            <td class="text-end">{{ "%.2f"|format(r.precio_total or 0) }} €</td>
+                            <td>{{ r.estado }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="alert alert-info mb-0">No hay reservas en el rango seleccionado.</div>
+            {% endif %}
+        </div>
+    </div>
+
+</div>
+{% endblock %}

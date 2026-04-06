@@ -1,0 +1,170 @@
+{% extends "base.html" %}
+{% block title %}Ficha de inquilino{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1"><i class="bi bi-person-vcard"></i> Ficha de inquilino</h2>
+            <p class="text-muted mb-0">Información personal y contratos asociados</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{{ url_for('alquileres.editar_inquilino', id=inquilino.id) }}" class="btn btn-warning">
+                <i class="bi bi-pencil"></i> Editar
+            </a>
+            <a href="{{ url_for('alquileres.inquilinos') }}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Volver
+            </a>
+        </div>
+    </div>
+
+    <div class="row g-4">
+
+        <div class="col-lg-5">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-header bg-primary text-white">
+                    <strong>Datos personales</strong>
+                </div>
+                <div class="card-body">
+
+                    <div class="mb-3">
+                        <div class="text-muted small">Nombre completo</div>
+                        <div class="fw-semibold fs-5">
+                            {{ inquilino.nombre }} {{ inquilino.apellidos or '' }}
+                        </div>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="text-muted small">DNI/NIE</div>
+                            <div>{{ inquilino.dni or 'No informado' }}</div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="text-muted small">Nacionalidad</div>
+                            <div>{{ inquilino.nacionalidad or 'No informada' }}</div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="text-muted small">Teléfono</div>
+                            <div>{{ inquilino.telefono or 'No informado' }}</div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="text-muted small">Email</div>
+                            <div>{{ inquilino.email or 'No informado' }}</div>
+                        </div>
+
+                        <div class="col-md-12">
+                            <div class="text-muted small">Dirección</div>
+                            <div>{{ inquilino.direccion or 'No informada' }}</div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="text-muted small">Código postal</div>
+                            <div>{{ inquilino.codigo_postal or '-' }}</div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="text-muted small">Municipio</div>
+                            <div>{{ inquilino.municipio or '-' }}</div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="text-muted small">Provincia</div>
+                            <div>{{ inquilino.provincia or '-' }}</div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="text-muted small">Fecha nacimiento</div>
+                            <div>
+                                {{ inquilino.fecha_nacimiento.strftime('%d/%m/%Y') if inquilino.fecha_nacimiento else 'No informada' }}
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="text-muted small">Estado civil</div>
+                            <div>{{ inquilino.estado_civil or 'No informado' }}</div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-7">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-light">
+                    <strong>Contratos asociados</strong>
+                </div>
+                <div class="card-body">
+
+                    {% if contratos %}
+                    <div class="d-flex flex-column gap-3">
+                        {% for contrato in contratos %}
+                        <div class="border rounded p-3">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <div>
+                                    <div class="fw-semibold">
+                                        Contrato #{{ contrato.id }}
+                                    </div>
+                                    <div class="text-muted small">
+                                        {{ contrato.propiedad.nombre if contrato.propiedad else 'Sin propiedad' }}
+                                    </div>
+                                </div>
+
+                                {% if contrato.estado == 'activo' %}
+                                <span class="badge bg-success">Activo</span>
+                                {% elif contrato.estado == 'finalizado' %}
+                                <span class="badge bg-secondary">Finalizado</span>
+                                {% elif contrato.estado == 'cancelado' %}
+                                <span class="badge bg-danger">Cancelado</span>
+                                {% else %}
+                                <span class="badge bg-light text-dark border">{{ contrato.estado }}</span>
+                                {% endif %}
+                            </div>
+
+                            <div class="row g-2 small mb-3">
+                                <div class="col-md-4">
+                                    <strong>Inicio:</strong>
+                                    {{ contrato.fecha_inicio.strftime('%d/%m/%Y') if contrato.fecha_inicio else '-' }}
+                                </div>
+                                <div class="col-md-4">
+                                    <strong>Fin:</strong>
+                                    {{ contrato.fecha_fin.strftime('%d/%m/%Y') if contrato.fecha_fin else '-' }}
+                                </div>
+                                <div class="col-md-4">
+                                    <strong>Renta:</strong>
+                                    {{ "%.2f"|format(contrato.renta_mensual or 0) }} €
+                                </div>
+                            </div>
+
+                            <div class="d-flex flex-wrap gap-2">
+                                <a href="{{ url_for('contratos.documento_contrato', contrato_id=contrato.id) }}"
+                                   class="btn btn-outline-primary btn-sm">
+                                    <i class="bi bi-file-earmark-text"></i> Ver contrato
+                                </a>
+
+                                <a href="{{ url_for('contratos.editar_contrato', contrato_id=contrato.id) }}"
+                                   class="btn btn-outline-warning btn-sm">
+                                    <i class="bi bi-pencil"></i> Editar contrato
+                                </a>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="alert alert-info mb-0">
+                        Este inquilino no tiene contratos asociados.
+                    </div>
+                    {% endif %}
+
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+{% endblock %}

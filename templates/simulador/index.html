@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+        <h3>🧪 Simulador de reservas</h3>
+        <div class="d-flex gap-2">
+            <form method="POST" action="{{ url_for('simulador.crear_demo_base') }}">
+                <button type="submit" class="btn btn-outline-primary btn-sm">
+                    🏠 Crear propiedad demo base
+                </button>
+            </form>
+            <form method="POST" action="{{ url_for('simulador.limpiar') }}" onsubmit="return confirm('¿Eliminar todas las reservas, huéspedes, ingresos y tareas de simulación?');">
+                <button type="submit" class="btn btn-outline-danger btn-sm">
+                    🗑 Limpiar simulación
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">Resumen</h5>
+                    <p class="mb-1"><strong>Reservas demo:</strong> {{ resumen.total_reservas_demo }}</p>
+                    <p class="mb-1"><strong>Ingresos demo:</strong> {{ resumen.total_ingresos_demo }}</p>
+                    <p class="mb-1"><strong>Propiedad completa:</strong> {{ resumen.total_completas_demo }}</p>
+                    <p class="mb-1"><strong>Por habitaciones:</strong> {{ resumen.total_habitaciones_demo }}</p>
+                    <p class="mb-1"><strong>Huéspedes demo:</strong> {{ resumen.total_huespedes_demo }}</p>
+                    <p class="mb-0"><strong>Tareas demo:</strong> {{ resumen.total_tareas_demo }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <form method="POST">
+
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Propiedad</label>
+                        <select name="propiedad_id" class="form-select">
+                            <option value="">-- Selecciona propiedad --</option>
+                            {% for p in propiedades %}
+                            <option value="{{ p.id }}">{{ p.nombre }}</option>
+                            {% endfor %}
+                        </select>
+                        <div class="form-text">O marca la opción de usar todas.</div>
+                    </div>
+
+                    <div class="col-md-6 d-flex align-items-end">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="usar_todas" value="1" id="usar_todas">
+                            <label class="form-check-label" for="usar_todas">
+                                Usar todas mis propiedades
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label">Cantidad de reservas</label>
+                        <input type="number" name="cantidad" class="form-control" value="20" min="1" max="500" required>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label">Días hacia adelante</label>
+                        <input type="number" name="dias_hacia_adelante" class="form-control" value="120" min="10" max="730" required>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label">Noches mínimas</label>
+                        <input type="number" name="noches_min" class="form-control" value="2" min="1" max="30" required>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label">Noches máximas</label>
+                        <input type="number" name="noches_max" class="form-control" value="7" min="1" max="60" required>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Modo de simulación</label>
+                        <select name="modo_reserva" class="form-select">
+                            <option value="completa">Vivienda completa</option>
+                            <option value="habitacion">Por habitaciones</option>
+                            <option value="mixto" selected>Mixto (tipo plataforma)</option>
+                        </select>
+                        <div class="form-text">
+                            Completa = bloquea toda la propiedad. Habitación = reserva una sola habitación.
+                            Mixto = combina ambas como una plataforma.
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Tipo de pago</label>
+                        <select name="tipo_pago" class="form-select">
+                            <option value="aleatorio" selected>Aleatorio</option>
+                            <option value="completo">Todo pagado</option>
+                            <option value="parcial">Pago parcial</option>
+                            <option value="pendiente">Sin pagar</option>
+                        </select>
+                        <div class="form-text">
+                            Si eliges aleatorio, el simulador mezclará pagos completos, parciales y pendientes.
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Canales</label>
+                        <div class="border rounded p-3">
+                            {% for canal in canales %}
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="canales" value="{{ canal }}" id="canal_{{ canal }}" checked>
+                                <label class="form-check-label" for="canal_{{ canal }}">
+                                    {{ canal|capitalize }}
+                                </label>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label">% canceladas</label>
+                        <input type="number" name="porcentaje_canceladas" class="form-control" value="10" min="0" max="100">
+                    </div>
+
+                    <div class="col-md-3 d-flex align-items-end">
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" name="generar_ingresos" value="1" id="generar_ingresos" checked>
+                            <label class="form-check-label" for="generar_ingresos">
+                                Generar ingresos automáticos
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <hr>
+
+                <div class="alert alert-info mb-3">
+                    El simulador creará reservas falsas marcadas con <strong>[SIMULADOR]</strong> para poder probar:
+                    calendarios, disponibilidad, propiedad completa, habitaciones, cobros parciales, pagos completos,
+                    comisiones de canal, tareas e ingresos sin tocar datos reales.
+                    También puedes usar <strong>Crear propiedad demo base</strong> para no enseñar una ERP vacía.
+                </div>
+
+                <div class="d-flex justify-content-end">
+                    <button type="submit" class="btn btn-success">
+                        ⚙️ Generar simulación
+                    </button>
+                </div>
+
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,182 @@
+{% extends "base.html" %}
+{% block title %}Ver recibo{% endblock %}
+
+{% block extra_css %}
+<style>
+    @media print {
+        .no-print, nav, footer, .alert {
+            display: none !important;
+        }
+
+        body {
+            background: #fff;
+        }
+
+        .card {
+            border: none !important;
+            box-shadow: none !important;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="card shadow-sm">
+    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+        <h5 class="mb-0"><i class="bi bi-receipt"></i> Recibo {{ recibo.numero or ('#' ~ recibo.id) }}</h5>
+        <span class="badge
+            {% if recibo.estado == 'pagado' %}bg-success
+            {% elif recibo.estado == 'pendiente' %}bg-warning text-dark
+            {% elif recibo.estado == 'impagado' %}bg-danger
+            {% elif recibo.estado == 'reclamado' %}bg-dark
+            {% else %}bg-secondary{% endif %}">
+            {{ recibo.estado }}
+        </span>
+    </div>
+
+    <div class="card-body">
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <h6 class="text-muted">Emisor</h6>
+                <p class="mb-1"><strong>{{ emisor.nombre }}</strong></p>
+                <p class="mb-1">{{ emisor.email or '-' }}</p>
+                <p class="mb-0">Usuario: {{ emisor.usuario }}</p>
+            </div>
+
+            <div class="col-md-6 text-md-end">
+                <h6 class="text-muted">Datos del recibo</h6>
+                <p class="mb-1"><strong>Número:</strong> {{ recibo.numero or ('#' ~ recibo.id) }}</p>
+                <p class="mb-1"><strong>Fecha emisión:</strong> {{ recibo.fecha_emision }}</p>
+                <p class="mb-0"><strong>Vencimiento:</strong> {{ recibo.fecha_vencimiento or '-' }}</p>
+            </div>
+        </div>
+
+        <div class="row mb-4">
+            <div class="col-md-4">
+                <h6 class="text-muted">Propiedad</h6>
+                <p class="mb-0"><strong>{{ recibo.propiedad.nombre if recibo.propiedad else '-' }}</strong></p>
+            </div>
+
+            <div class="col-md-4">
+                <h6 class="text-muted">Inquilino</h6>
+                <p class="mb-0">
+                    {% if recibo.inquilino %}
+                    <strong>{{ recibo.inquilino.nombre }} {{ recibo.inquilino.apellidos }}</strong>
+                    {% else %}
+                    -
+                    {% endif %}
+                </p>
+            </div>
+
+            <div class="col-md-4">
+                <h6 class="text-muted">Situación y abono</h6>
+                <p class="mb-1"><strong>Situación:</strong> {{ recibo.estado }}</p>
+                <p class="mb-0"><strong>Método de abono:</strong> {{ recibo.metodo_pago or '-' }}</p>
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <strong>Estado envío:</strong>
+            {% if recibo.enviado_email or recibo.enviado_whatsapp %}
+            <span class="badge bg-success">Enviado</span>
+            {% else %}
+            <span class="badge bg-secondary">No enviado</span>
+            {% endif %}
+        </div>
+
+        <div class="mb-4">
+            <strong>Email:</strong>
+            {% if recibo.enviado_email %}
+            <span class="text-success">✔</span>
+            {% else %}
+            <span class="text-danger">✖</span>
+            {% endif %}
+
+            &nbsp;&nbsp;|&nbsp;&nbsp;
+
+            <strong>WhatsApp:</strong>
+            {% if recibo.enviado_whatsapp %}
+            <span class="text-success">✔</span>
+            {% else %}
+            <span class="text-danger">✖</span>
+            {% endif %}
+        </div>
+
+        <div class="table-responsive mb-4">
+            <table class="table table-bordered align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Tipo</th>
+                        <th>Concepto</th>
+                        <th>Cantidad</th>
+                        <th>Precio unitario</th>
+                        <th>Importe</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for linea in recibo.lineas %}
+                    <tr>
+                        <td>{{ linea.tipo }}</td>
+                        <td>{{ linea.concepto }}</td>
+                        <td>{{ linea.cantidad }}</td>
+                        <td>{{ "%.3f"|format(linea.precio_unitario or 0) }} €</td>
+                        <td>{{ "%.3f"|format(linea.importe or 0) }} €</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="row mb-4">
+            <div class="col-md-4">
+                <strong>Subtotal:</strong> {{ "%.2f"|format(recibo.subtotal or 0) }} €
+            </div>
+            <div class="col-md-4">
+                <strong>Impuestos:</strong> {{ "%.2f"|format(recibo.impuestos or 0) }} €
+            </div>
+            <div class="col-md-4">
+                <strong>Total:</strong> {{ "%.2f"|format(recibo.total or 0) }} €
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <strong>Instrucciones de pago:</strong><br>
+            {{ recibo.instrucciones_pago or '-' }}
+        </div>
+
+        <div class="mb-3">
+            <strong>Observaciones:</strong><br>
+            {{ recibo.observaciones or '-' }}
+        </div>
+
+        <div class="alert alert-secondary mb-4">
+            {{ recibo.leyenda_legal }}
+        </div>
+
+        <div class="d-flex flex-wrap gap-2 no-print">
+            <a href="{{ url_for('recibos.editar', id=recibo.id) }}" class="btn btn-warning">Editar</a>
+
+            {% if recibo.estado != 'pagado' %}
+            <form method="POST" action="{{ url_for('recibos.pagar', id=recibo.id) }}">
+                <input type="hidden" name="metodo_pago" value="transferencia">
+                <button type="submit" class="btn btn-success">Marcar pagado</button>
+            </form>
+            {% else %}
+            <form method="POST" action="{{ url_for('recibos.deshacer_pago', id=recibo.id) }}">
+                <button type="submit" class="btn btn-secondary">Deshacer pago</button>
+            </form>
+            {% endif %}
+
+            <button type="button" onclick="window.print()" class="btn btn-dark">Imprimir</button>
+            <a href="{{ url_for('recibos.exportar', id=recibo.id) }}" class="btn btn-outline-dark">Exportar TXT</a>
+
+            <form method="POST" action="{{ url_for('recibos.enviar_email', id=recibo.id) }}">
+                <button type="submit" class="btn btn-primary">Enviar email</button>
+            </form>
+
+            <a href="{{ url_for('recibos.enviar_whatsapp', id=recibo.id) }}" class="btn btn-success">WhatsApp</a>
+            <a href="{{ url_for('recibos.index') }}" class="btn btn-secondary">Volver</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

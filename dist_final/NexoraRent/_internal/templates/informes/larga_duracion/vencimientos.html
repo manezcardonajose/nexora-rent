@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}Vencimientos{% endblock %}
+{% block content %}
+<div class="print-only mb-3">
+    <h2>NEXORA RENT</h2>
+    <p>Informe generado el {{ now().strftime("%d/%m/%Y") }}</p>
+    <hr>
+</div>
+<div class="container-fluid px-3 px-lg-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div><h2 class="mb-1"><i class="bi bi-calendar-event"></i> Vencimientos de contratos</h2><p class="text-muted mb-0">Control de contratos próximos a terminar o ya vencidos</p></div>
+        {% include "informes/_acciones_informe.html" %}
+    </div>
+    <form method="GET" class="card shadow-sm mb-4 no-print"><div class="card-body"><div class="row g-3 align-items-end">
+        <div class="col-md-4"><label class="form-label">Propiedad</label><select name="propiedad_id" class="form-select"><option value="">Todas</option>{% for propiedad in propiedades %}<option value="{{ propiedad.id }}" {% if propiedad_id == propiedad.id %}selected{% endif %}>{{ propiedad.nombre }}</option>{% endfor %}</select></div>
+        <div class="col-md-4"><label class="form-label">Horizonte</label><select name="horizonte" class="form-select"><option value="30" {% if horizonte == 30 %}selected{% endif %}>30 días</option><option value="60" {% if horizonte == 60 %}selected{% endif %}>60 días</option><option value="90" {% if horizonte == 90 %}selected{% endif %}>90 días</option><option value="120" {% if horizonte == 120 %}selected{% endif %}>120 días</option></select></div>
+        <div class="col-md-4 d-grid"><button type="submit" class="btn btn-warning">Filtrar</button></div>
+    </div></div></form>
+    <div class="row g-3 mb-4">
+        <div class="col-md-3"><div class="card shadow-sm"><div class="card-body"><div class="small text-muted">Vencen en 30 días</div><div class="fs-4 fw-bold text-warning">{{ vencen_30 }}</div></div></div></div>
+        <div class="col-md-3"><div class="card shadow-sm"><div class="card-body"><div class="small text-muted">Vencen en 60 días</div><div class="fs-4 fw-bold">{{ vencen_60 }}</div></div></div></div>
+        <div class="col-md-3"><div class="card shadow-sm"><div class="card-body"><div class="small text-muted">Vencen en 90 días</div><div class="fs-4 fw-bold">{{ vencen_90 }}</div></div></div></div>
+        <div class="col-md-3"><div class="card shadow-sm bg-danger text-white"><div class="card-body"><div class="small opacity-75">Ya vencidos</div><div class="fs-4 fw-bold">{{ vencidos }}</div></div></div></div>
+    </div>
+    <div class="card shadow-sm"><div class="card-body">
+        {% if detalle %}
+        <div class="table-responsive"><table class="table table-bordered table-hover align-middle">
+            <thead class="table-light"><tr><th>Contrato</th><th>Inquilino</th><th>Propiedad</th><th>Inicio</th><th>Fin</th><th class="text-center">Días restantes</th><th class="text-end">Renta mensual</th></tr></thead>
+            <tbody>{% for item in detalle %}{% set contrato = item.contrato %}<tr><td>#{{ contrato.id }}</td><td>{{ (contrato.inquilino.nombre ~ ' ' ~ (contrato.inquilino.apellidos or '')) if contrato.inquilino else '-' }}</td><td>{{ contrato.propiedad.nombre if contrato.propiedad else '-' }}</td><td>{{ contrato.fecha_inicio or '-' }}</td><td>{{ contrato.fecha_fin or '-' }}</td><td class="text-center">{{ item.dias_restantes }}</td><td class="text-end fw-semibold">{{ "%.2f"|format(contrato.renta_mensual or 0) }} €</td></tr>{% endfor %}</tbody>
+        </table></div>
+        {% else %}<div class="alert alert-success mb-0">No hay contratos dentro del horizonte seleccionado.</div>{% endif %}
+    </div></div>
+</div>
+{% endblock %}

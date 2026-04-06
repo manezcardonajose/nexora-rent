@@ -1,0 +1,191 @@
+{% extends "base.html" %}
+{% block title %}Nuevo recibo{% endblock %}
+
+{% block content %}
+<div class="card shadow-sm">
+    <div class="card-header bg-primary text-white">
+        <h5 class="mb-0"><i class="bi bi-receipt"></i> Nuevo recibo</h5>
+    </div>
+    <div class="card-body">
+        <form method="POST">
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">Propiedad</label>
+                    <select name="propiedad_id" id="propiedad_id" class="form-select" required>
+                        <option value="">Selecciona</option>
+                        {% for propiedad in propiedades %}
+                        <option value="{{ propiedad.id }}" {% if propiedad.id == propiedad_id %}selected{% endif %}>
+                            {{ propiedad.nombre }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">Contrato</label>
+                    <select name="contrato_id" id="contrato_id" class="form-select">
+                        <option value="">Sin contrato</option>
+                        {% for contrato in contratos %}
+                        <option value="{{ contrato.id }}" {% if contrato.id == contrato_id %}selected{% endif %}>
+                            #{{ contrato.id }} - {{ contrato.propiedad.nombre if contrato.propiedad else '-' }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">Inquilino</label>
+                    <select name="inquilino_id" id="inquilino_id" class="form-select">
+                        <option value="">Sin inquilino</option>
+                        {% for inquilino in inquilinos %}
+                        <option value="{{ inquilino.id }}" {% if inquilino.id == inquilino_id %}selected{% endif %}>
+                            {{ inquilino.nombre }} {{ inquilino.apellidos }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-md-3 mb-3">
+                    <label class="form-label">Fecha emisión</label>
+                    <input type="date" name="fecha_emision" class="form-control" value="{{ request.args.get('fecha_emision', '') }}">
+                </div>
+
+                <div class="col-md-3 mb-3">
+                    <label class="form-label">Fecha vencimiento</label>
+                    <input type="date" name="fecha_vencimiento" class="form-control" value="{{ request.args.get('fecha_vencimiento', '') }}">
+                </div>
+
+                <div class="col-md-3 mb-3">
+                    <label class="form-label">Tipo</label>
+                    <select name="tipo" class="form-select">
+                        {% for tipo in tipos_recibo %}
+                        <option value="{{ tipo }}" {% if tipo == 'alquiler' %}selected{% endif %}>{{ tipo }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-md-3 mb-3">
+                    <label class="form-label">Situación del recibo</label>
+                    <select name="estado" class="form-select">
+                        {% for estado in estados %}
+                        <option value="{{ estado }}">{{ estado }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-md-3 mb-3">
+                    <label class="form-label">Impuestos</label>
+                    <input type="number" step="0.01" name="impuestos" class="form-control" value="0">
+                </div>
+
+                <div class="col-md-3 mb-3">
+                    <label class="form-label">Método de abono</label>
+                    <select name="metodo_pago" class="form-select">
+                        <option value="">Selecciona</option>
+                        {% for metodo in metodos_abono %}
+                        <option value="{{ metodo }}">{{ metodo }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-md-3 mb-3">
+                    <label class="form-label">Fecha pago</label>
+                    <input type="date" name="fecha_pago" class="form-control">
+                </div>
+            </div>
+
+            <div class="card border mt-3">
+                <div class="card-header bg-light">
+                    <strong>Líneas del recibo</strong>
+                </div>
+                <div class="card-body">
+                    <div class="row fw-bold text-muted mb-2">
+                        <div class="col-md-2">Tipo</div>
+                        <div class="col-md-4">Concepto</div>
+                        <div class="col-md-2">Cantidad</div>
+                        <div class="col-md-2">Precio</div>
+                        <div class="col-md-2">Observaciones</div>
+                    </div>
+
+                    {% for i in range(4) %}
+                    <div class="row mb-2">
+                        <div class="col-md-2">
+                            <select name="linea_tipo[]" class="form-select">
+                                <option value="alquiler" {% if i == 0 %}selected{% endif %}>alquiler</option>
+                                <option value="suministro">suministro</option>
+                                <option value="servicio">servicio</option>
+                                <option value="ajuste">ajuste</option>
+                                <option value="otro">otro</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <input type="text" name="linea_concepto[]" class="form-control"
+                                   placeholder="Concepto"
+                                   value="{% if i == 0 %}Mensualidad alquiler{% endif %}">
+                        </div>
+                        <div class="col-md-2">
+                            <input type="number" step="0.01" name="linea_cantidad[]" class="form-control"
+                                   value="{% if i == 0 %}1{% else %}0{% endif %}">
+                        </div>
+                        <div class="col-md-2">
+                            <input type="number" step="0.001" name="linea_precio[]" class="form-control"
+                                   value="{% if i == 0 %}{{ importe or 0 }}{% else %}0{% endif %}">
+                        </div>
+                        <div class="col-md-2">
+                            <input type="text" name="linea_observaciones[]" class="form-control" placeholder="Obs.">
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="row mt-3">
+                <div class="col-md-12 mb-3">
+                    <label class="form-label">Instrucciones de pago</label>
+                    <textarea name="instrucciones_pago" class="form-control" rows="2">Pago por transferencia o el medio pactado.</textarea>
+                </div>
+
+                <div class="col-md-12 mb-3">
+                    <label class="form-label">Observaciones</label>
+                    <textarea name="observaciones" class="form-control" rows="2"></textarea>
+                </div>
+
+                <div class="col-md-12 mb-3">
+                    <label class="form-label">Leyenda legal</label>
+                    <textarea name="leyenda_legal" class="form-control" rows="2">La mera tenencia o recepción de este recibo no acredita su pago. Solo se considerará abonado cuando vaya acompañado del correspondiente justificante de pago.</textarea>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-between mt-3">
+                <a href="{{ url_for('recibos.index') }}" class="btn btn-secondary">Volver</a>
+                <button type="submit" class="btn btn-success">Guardar recibo</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+document.getElementById('contrato_id').addEventListener('change', async function () {
+    const contratoId = this.value;
+    if (!contratoId) return;
+
+    const response = await fetch(`/recibos/contrato/${contratoId}/datos`);
+    if (!response.ok) return;
+
+    const data = await response.json();
+
+    if (data.propiedad_id) {
+        document.getElementById('propiedad_id').value = data.propiedad_id;
+    }
+
+    if (data.inquilino_id) {
+        document.getElementById('inquilino_id').value = data.inquilino_id;
+    }
+
+    const precios = document.getElementsByName('linea_precio[]');
+    if (precios.length > 0 && data.renta_mensual !== undefined) {
+        precios[0].value = data.renta_mensual;
+    }
+});
+</script>
+{% endblock %}

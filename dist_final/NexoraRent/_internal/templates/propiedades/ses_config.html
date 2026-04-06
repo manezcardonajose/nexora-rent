@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-danger text-white">
+                <h4 class="mb-0"><i class="bi bi-file-earmark-text"></i> Configuración SES.Hospedajes</h4>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i>
+                    Estos datos son necesarios para generar los archivos XML oficiales del Ministerio del Interior.
+                    Puedes obtenerlos al darte de alta en <a href="https://ses.mir.es" target="_blank">SES.Hospedajes</a>.
+                </div>
+
+                <form method="POST" action="{{ url_for('propiedades.guardar_ses', id=propiedad.id) }}">
+                    <div class="mb-3">
+                        <label class="form-label">Código de establecimiento</label>
+                        <input type="text" class="form-control" name="codigo_ses" value="{{ propiedad.codigo_ses or '' }}">
+                        <small class="text-muted">Ej: VIV-12345</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Código de arrendador</label>
+                        <input type="text" class="form-control" name="codigo_arrendador" value="{{ propiedad.codigo_arrendador or '' }}">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Usuario WS</label>
+                        <input type="text" class="form-control" name="usuario_ses" value="{{ propiedad.usuario_ses or '' }}">
+                        <small class="text-muted">Termina en WS, ej: VIV-12345-WS</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Contraseña WS</label>
+                        <input type="password" class="form-control" name="password_ses" value="{{ propiedad.password_ses or '' }}">
+                    </div>
+
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for('propiedades.ver', id=propiedad.id) }}" class="btn btn-secondary me-md-2">
+                            <i class="bi bi-x-circle"></i> Cancelar
+                        </a>
+                        <button type="submit" class="btn btn-danger">
+                            <i class="bi bi-save"></i> Guardar configuración
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

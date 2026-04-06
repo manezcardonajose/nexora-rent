@@ -1,0 +1,13 @@
+<div class="d-flex justify-content-between align-items-center mb-3 no-print">
+    <div>
+        <a href="{{ request.referrer or url_for('informes.index') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Volver
+        </a>
+    </div>
+
+    <div class="d-flex gap-2">
+        <button type="button" onclick="window.print()" class="btn btn-dark">
+            <i class="bi bi-printer"></i> Imprimir
+        </button>
+    </div>
+</div>

@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% block title %}Nuevo inquilino{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1"><i class="bi bi-person-plus"></i> Nuevo inquilino</h2>
+            <p class="text-muted mb-0">Alta de arrendatario para contratos de larga duración</p>
+        </div>
+        <a href="{{ url_for('alquileres.inquilinos') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Volver
+        </a>
+    </div>
+
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-primary text-white">
+            <strong>Datos del inquilino</strong>
+        </div>
+        <div class="card-body">
+
+            <form method="POST">
+                <div class="row g-3">
+
+                    <div class="col-md-4">
+                        <label class="form-label">Nombre</label>
+                        <input type="text" name="nombre" class="form-control" required>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label">Apellidos</label>
+                        <input type="text" name="apellidos" class="form-control">
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label">DNI/NIE</label>
+                        <input type="text" name="dni" class="form-control">
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label">Nacionalidad</label>
+                        <input type="text" name="nacionalidad" class="form-control">
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label">Teléfono</label>
+                        <input type="text" name="telefono" class="form-control">
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label">Email</label>
+                        <input type="email" name="email" class="form-control">
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Dirección</label>
+                        <input type="text" name="direccion" class="form-control">
+                    </div>
+
+                    <div class="col-md-2">
+                        <label class="form-label">Código postal</label>
+                        <input type="text" name="codigo_postal" class="form-control">
+                    </div>
+
+                    <div class="col-md-2">
+                        <label class="form-label">Municipio</label>
+                        <input type="text" name="municipio" class="form-control">
+                    </div>
+
+                    <div class="col-md-2">
+                        <label class="form-label">Provincia</label>
+                        <input type="text" name="provincia" class="form-control">
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label">Fecha nacimiento</label>
+                        <input type="date" name="fecha_nacimiento" class="form-control">
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label">Estado civil</label>
+                        <input type="text" name="estado_civil" class="form-control">
+                    </div>
+
+                </div>
+
+                <div class="d-flex justify-content-end gap-2 mt-4">
+                    <a href="{{ url_for('alquileres.inquilinos') }}" class="btn btn-secondary">Cancelar</a>
+                    <button type="submit" class="btn btn-success">
+                        <i class="bi bi-check-circle"></i> Guardar inquilino
+                    </button>
+                </div>
+            </form>
+
+        </div>
+    </div>
+
+</div>
+{% endblock %}

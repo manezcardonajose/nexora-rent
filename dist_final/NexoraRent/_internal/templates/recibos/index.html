@@ -1,0 +1,242 @@
+{% extends "base.html" %}
+{% block title %}Recibos{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="mb-1"><i class="bi bi-receipt"></i> Recibos</h2>
+        <p class="text-muted mb-0">Listado general de recibos</p>
+    </div>
+    <a href="{{ url_for('recibos.nuevo') }}" class="btn btn-primary">
+        <i class="bi bi-plus-circle"></i> Nuevo recibo
+    </a>
+</div>
+
+<div class="card shadow-sm mb-4">
+    <div class="card-header bg-primary text-white">
+        <strong>Filtros</strong>
+    </div>
+    <div class="card-body">
+        <form method="GET" class="row g-3">
+            <div class="col-md-3">
+                <label class="form-label">Propiedad</label>
+                <select name="propiedad_id" class="form-select">
+                    <option value="">Todas</option>
+                    {% for propiedad in propiedades %}
+                    <option value="{{ propiedad.id }}" {% if request.args.get('propiedad_id') == propiedad.id|string %}selected{% endif %}>
+                        {{ propiedad.nombre }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="col-md-3">
+                <label class="form-label">Contrato</label>
+                <select name="contrato_id" class="form-select">
+                    <option value="">Todos</option>
+                    {% for contrato in contratos %}
+                    <option value="{{ contrato.id }}" {% if request.args.get('contrato_id') == contrato.id|string %}selected{% endif %}>
+                        #{{ contrato.id }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="col-md-3">
+                <label class="form-label">Estado</label>
+                <select name="estado" class="form-select">
+                    <option value="">Todos</option>
+                    {% for estado in estados %}
+                    <option value="{{ estado }}" {% if request.args.get('estado') == estado %}selected{% endif %}>
+                        {{ estado }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="col-md-3">
+                <label class="form-label">Tipo</label>
+                <select name="tipo" class="form-select">
+                    <option value="">Todos</option>
+                    {% for tipo in tipos %}
+                    <option value="{{ tipo }}" {% if request.args.get('tipo') == tipo %}selected{% endif %}>
+                        {{ tipo }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="col-12">
+                <button type="submit" class="btn btn-primary">Filtrar</button>
+                <a href="{{ url_for('recibos.index') }}" class="btn btn-secondary">Limpiar</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-header bg-primary text-white">
+        <strong>Listado</strong>
+    </div>
+    <div class="card-body">
+        {% if recibos %}
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th style="min-width: 340px;">Documento</th>
+                        <th>Fecha</th>
+                        <th>Situación</th>
+                        <th>Envío</th>
+                        <th>Método</th>
+                        <th class="text-end">Importe</th>
+                        <th class="text-center" style="width: 120px;">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for recibo in recibos %}
+                    {% set primera_linea = recibo.lineas.first() %}
+                    <tr>
+                        <td>
+                            <div class="fw-semibold">{{ recibo.numero or ('#' ~ recibo.id) }}</div>
+
+                            <div class="small text-dark">
+                                {{ recibo.inquilino.nombre ~ ' ' ~ recibo.inquilino.apellidos if recibo.inquilino else 'Sin inquilino' }}
+                                {% if recibo.propiedad %}
+                                · {{ recibo.propiedad.nombre }}
+                                {% endif %}
+                            </div>
+
+                            <div class="small text-muted">
+                                {% if primera_linea and primera_linea.concepto %}
+                                {{ primera_linea.concepto }}
+                                {% else %}
+                                {{ recibo.tipo|capitalize }}
+                                {% endif %}
+                                {% if recibo.contrato %}
+                                · Contrato #{{ recibo.contrato.id }}
+                                {% endif %}
+                            </div>
+                        </td>
+
+                        <td>
+                            <div>{{ recibo.fecha_emision }}</div>
+                            <div class="small text-muted">
+                                Vto: {{ recibo.fecha_vencimiento or '-' }}
+                            </div>
+                        </td>
+
+                        <td>
+                            {% if recibo.estado == 'pagado' %}
+                            <span class="badge bg-success">Pagado</span>
+                            {% elif recibo.estado == 'pendiente' %}
+                            <span class="badge bg-warning text-dark">Pendiente</span>
+                            {% elif recibo.estado == 'impagado' %}
+                            <span class="badge bg-danger">Impagado</span>
+                            {% elif recibo.estado == 'reclamado' %}
+                            <span class="badge bg-dark">Reclamado</span>
+                            {% else %}
+                            <span class="badge bg-secondary">{{ recibo.estado }}</span>
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            {% if recibo.enviado_email or recibo.enviado_whatsapp %}
+                            <span class="badge bg-success">Enviado</span>
+                            <div class="small text-muted mt-1">
+                                {% if recibo.enviado_email %}Email{% endif %}
+                                {% if recibo.enviado_email and recibo.enviado_whatsapp %} · {% endif %}
+                                {% if recibo.enviado_whatsapp %}WhatsApp{% endif %}
+                            </div>
+                            {% else %}
+                            <span class="badge bg-secondary">Pendiente</span>
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            <span class="small">{{ recibo.metodo_pago or '-' }}</span>
+                        </td>
+
+                        <td class="text-end fw-semibold">
+                            {{ "%.2f"|format(recibo.total or 0) }} €
+                        </td>
+
+                        <td class="text-center">
+                            <div class="dropdown">
+                                <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    Acciones
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end shadow">
+                                    <li>
+                                        <a class="dropdown-item" href="{{ url_for('recibos.ver', id=recibo.id) }}">
+                                            <i class="bi bi-eye"></i> Ver
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" href="{{ url_for('recibos.editar', id=recibo.id) }}">
+                                            <i class="bi bi-pencil"></i> Editar
+                                        </a>
+                                    </li>
+
+                                    {% if recibo.estado != 'pagado' %}
+                                    <li>
+                                        <form method="POST" action="{{ url_for('recibos.pagar', id=recibo.id) }}">
+                                            <input type="hidden" name="metodo_pago" value="transferencia">
+                                            <button type="submit" class="dropdown-item">
+                                                <i class="bi bi-check-circle"></i> Marcar pagado
+                                            </button>
+                                        </form>
+                                    </li>
+                                    {% else %}
+                                    <li>
+                                        <form method="POST" action="{{ url_for('recibos.deshacer_pago', id=recibo.id) }}">
+                                            <button type="submit" class="dropdown-item">
+                                                <i class="bi bi-arrow-counterclockwise"></i> Deshacer pago
+                                            </button>
+                                        </form>
+                                    </li>
+                                    {% endif %}
+
+                                    <li>
+                                        <a class="dropdown-item" href="{{ url_for('recibos.exportar', id=recibo.id) }}">
+                                            <i class="bi bi-download"></i> Exportar TXT
+                                        </a>
+                                    </li>
+
+                                    <li>
+                                        <form method="POST" action="{{ url_for('recibos.enviar_email', id=recibo.id) }}">
+                                            <button type="submit" class="dropdown-item">
+                                                <i class="bi bi-envelope"></i> Enviar email
+                                            </button>
+                                        </form>
+                                    </li>
+
+                                    <li>
+                                        <a class="dropdown-item" href="{{ url_for('recibos.enviar_whatsapp', id=recibo.id) }}">
+                                            <i class="bi bi-whatsapp"></i> Enviar WhatsApp
+                                        </a>
+                                    </li>
+
+                                    <li><hr class="dropdown-divider"></li>
+
+                                    <li>
+                                        <form method="POST" action="{{ url_for('recibos.eliminar', id=recibo.id) }}" onsubmit="return confirm('¿Eliminar este recibo?')">
+                                            <button type="submit" class="dropdown-item text-danger">
+                                                <i class="bi bi-trash"></i> Eliminar
+                                            </button>
+                                        </form>
+                                    </li>
+                                </ul>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="alert alert-info mb-0">No hay recibos registrados.</div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

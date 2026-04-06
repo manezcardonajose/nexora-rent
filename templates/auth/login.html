@@ -1,0 +1,168 @@
+{% extends "base.html" %}
+
+{% block title %}Acceso · NEXORA RENT{% endblock %}
+
+{% block extra_css %}
+<style>
+    .login-wrapper {
+        max-width: 1080px;
+        margin: 0 auto;
+    }
+
+    .login-card {
+        border: 0;
+        border-radius: 1.4rem;
+        overflow: hidden;
+        box-shadow: 0 20px 45px rgba(15, 23, 42, 0.12);
+    }
+
+    .login-brand-side {
+        background:
+            radial-gradient(circle at top right, rgba(255,255,255,0.14), transparent 30%),
+            linear-gradient(145deg, #0b2545 0%, #163d6b 55%, #1f5d96 100%);
+        color: white;
+        padding: 2.5rem;
+        height: 100%;
+    }
+
+    .login-brand-side img {
+        max-height: 110px;
+        width: auto;
+        background: rgba(255,255,255,0.08);
+        border-radius: 18px;
+        padding: .6rem;
+        margin-bottom: 1rem;
+    }
+
+    .login-brand-side h2 {
+        font-weight: 800;
+        letter-spacing: 1px;
+        margin-bottom: .75rem;
+    }
+
+    .login-brand-side p {
+        opacity: .9;
+        margin-bottom: 1.5rem;
+    }
+
+    .login-brand-side .login-feature {
+        background: rgba(255,255,255,0.10);
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 1rem;
+        padding: .75rem 1rem;
+        margin-bottom: .75rem;
+    }
+
+    .login-form-side {
+        padding: 2.2rem;
+        background: #fff;
+    }
+
+    .login-form-side .card-title {
+        font-weight: 700;
+        color: #0b2545;
+    }
+
+    .login-form-side .form-control {
+        border-radius: .85rem;
+        padding: .75rem .95rem;
+    }
+
+    .login-form-side .btn-primary {
+        border-radius: .85rem;
+        padding: .75rem 1.1rem;
+        font-weight: 600;
+        background: linear-gradient(90deg, #0b2545, #1f5d96);
+        border: 0;
+    }
+
+    .login-form-side .btn-primary:hover {
+        opacity: .95;
+    }
+
+    @media (max-width: 767.98px) {
+        .login-brand-side {
+            padding: 1.75rem;
+        }
+
+        .login-form-side {
+            padding: 1.5rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="login-wrapper py-3 py-md-4">
+    <div class="card login-card">
+        <div class="row g-0">
+            <div class="col-lg-5">
+                <div class="login-brand-side d-flex flex-column justify-content-center">
+                    <div class="text-center text-lg-start">
+                        <img src="{{ url_for('static', filename='img/logo_nexora_rent.png') }}"
+                             alt="Nexora Rent">
+                        <h2>NEXORA RENT</h2>
+                        <p>Accede a tu entorno profesional de gestión inmobiliaria con una experiencia moderna, segura y preparada para crecer contigo.</p>
+                    </div>
+
+                    <div class="login-feature">
+                        <i class="bi bi-building-check me-2"></i>
+                        Gestión integral de propiedades
+                    </div>
+                    <div class="login-feature">
+                        <i class="bi bi-file-earmark-text me-2"></i>
+                        Contratos, recibos y control documental
+                    </div>
+                    <div class="login-feature">
+                        <i class="bi bi-graph-up-arrow me-2"></i>
+                        Finanzas, informes y rentabilidad
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-7">
+                <div class="login-form-side">
+                    <div class="mb-4">
+                        <h3 class="card-title mb-1">Iniciar sesión</h3>
+                        <p class="text-muted mb-0">Introduce tus credenciales para entrar en la plataforma.</p>
+                    </div>
+
+                    <form method="POST" action="">
+                        {{ form.hidden_tag() }}
+
+                        <div class="mb-3">
+                            {{ form.username.label(class="form-label") }}
+                            {{ form.username(class="form-control") }}
+                            {% for error in form.username.errors %}
+                            <div class="text-danger small mt-1">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+
+                        <div class="mb-3">
+                            {{ form.password.label(class="form-label") }}
+                            {{ form.password(class="form-control") }}
+                            {% for error in form.password.errors %}
+                            <div class="text-danger small mt-1">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+
+                        <div class="mb-3 form-check">
+                            {{ form.remember_me(class="form-check-input") }}
+                            {{ form.remember_me.label(class="form-check-label") }}
+                        </div>
+
+                        <div class="d-flex flex-column flex-md-row gap-2 align-items-stretch align-items-md-center">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-box-arrow-in-right me-1"></i> Entrar
+                            </button>
+                            <a href="{{ url_for('auth.register') }}" class="btn btn-link text-decoration-none">
+                                ¿No tienes cuenta? Regístrate
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

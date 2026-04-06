@@ -1,0 +1,165 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-warning text-dark">
+                <h4 class="mb-0"><i class="bi bi-pencil-square"></i> Editar huésped</h4>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i>
+                    Editando huésped de la reserva #{{ reserva.id }}
+                </div>
+
+                <form method="POST" action="">
+                    {{ form.hidden_tag() }}
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            {{ form.nombre.label(class="form-label") }}
+                            {{ form.nombre(class="form-control") }}
+                            {% for error in form.nombre.errors %}
+                            <span class="text-danger">{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            {{ form.apellidos.label(class="form-label") }}
+                            {{ form.apellidos(class="form-control") }}
+                            {% for error in form.apellidos.errors %}
+                            <span class="text-danger">{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            {{ form.sexo.label(class="form-label") }}
+                            {{ form.sexo(class="form-select") }}
+                            {% for error in form.sexo.errors %}
+                            <span class="text-danger">{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            {{ form.fecha_nacimiento.label(class="form-label") }}
+                            {{ form.fecha_nacimiento(class="form-control", type="date") }}
+                            {% for error in form.fecha_nacimiento.errors %}
+                            <span class="text-danger">{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            {{ form.nacionalidad.label(class="form-label") }}
+                            {{ form.nacionalidad(class="form-select") }}
+                            {% for error in form.nacionalidad.errors %}
+                            <span class="text-danger">{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            {{ form.tipo_documento.label(class="form-label") }}
+                            {{ form.tipo_documento(class="form-select") }}
+                            {% for error in form.tipo_documento.errors %}
+                            <span class="text-danger">{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            {{ form.numero_documento.label(class="form-label") }}
+                            {{ form.numero_documento(class="form-control") }}
+                            {% for error in form.numero_documento.errors %}
+                            <span class="text-danger">{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            {{ form.numero_soporte.label(class="form-label") }}
+                            {{ form.numero_soporte(class="form-control") }}
+                        </div>
+                    </div>
+
+                    <div class="mb-3 form-check">
+                        {{ form.mismo_domicilio(class="form-check-input", id="mismo_domicilio") }}
+                        {{ form.mismo_domicilio.label(class="form-check-label") }}
+                    </div>
+
+                    <div id="domicilio-fields">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                {{ form.domicilio.label(class="form-label") }}
+                                {{ form.domicilio(class="form-control") }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                {{ form.ciudad.label(class="form-label") }}
+                                {{ form.ciudad(class="form-control") }}
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                {{ form.codigo_postal.label(class="form-label") }}
+                                {{ form.codigo_postal(class="form-control") }}
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                {{ form.pais.label(class="form-label") }}
+                                {{ form.pais(class="form-control") }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            {{ form.telefono.label(class="form-label") }}
+                            {{ form.telefono(class="form-control") }}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            {{ form.email.label(class="form-label") }}
+                            {{ form.email(class="form-control", type="email") }}
+                            {% for error in form.email.errors %}
+                            <span class="text-danger">{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for('huespedes.index', reserva_id=reserva.id) }}" class="btn btn-secondary me-md-2">
+                            <i class="bi bi-x-circle"></i> Cancelar
+                        </a>
+                        <button type="submit" class="btn btn-warning">
+                            <i class="bi bi-check-circle"></i> Actualizar
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const mismoDomicilio = document.getElementById('mismo_domicilio');
+    const domicilioFields = document.getElementById('domicilio-fields');
+
+    function toggleDomicilioFields() {
+        if (mismoDomicilio.checked) {
+            domicilioFields.style.display = 'none';
+            // Limpiar campos si están ocultos (opcional)
+            document.querySelectorAll('#domicilio-fields input').forEach(input => {
+                input.value = '';
+            });
+        } else {
+            domicilioFields.style.display = 'block';
+        }
+    }
+
+    mismoDomicilio.addEventListener('change', toggleDomicilioFields);
+    toggleDomicilioFields(); // Estado inicial
+});
+</script>
+
+<div class="mb-3 form-check">
+    <input type="checkbox" class="form-check-input" id="consentimiento" name="consentimiento" required>
+    <label class="form-check-label" for="consentimiento">
+        Declaro que he informado al huésped sobre el tratamiento de sus datos personales según la <a href="{{ url_for('main.politica_privacidad') }}" target="_blank">Política de Privacidad</a> y que cuenta con su consentimiento para su registro en el sistema de alojamiento.
+    </label>
+</div>
+{% endblock %}

@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% block title %}Inquilinos{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1"><i class="bi bi-people"></i> Inquilinos</h2>
+            <p class="text-muted mb-0">Gestión de arrendatarios e intervinientes principales</p>
+        </div>
+        <a href="{{ url_for('alquileres.nuevo_inquilino') }}" class="btn btn-primary">
+            <i class="bi bi-person-plus"></i> Nuevo inquilino
+        </a>
+    </div>
+
+    {% if inquilinos %}
+    <div class="row g-4">
+        {% for inquilino in inquilinos %}
+        <div class="col-md-6 col-xl-4">
+            <div class="card shadow-sm h-100 border-0">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div>
+                            <h5 class="card-title mb-1">
+                                {{ inquilino.nombre }} {{ inquilino.apellidos or '' }}
+                            </h5>
+                            <div class="text-muted small">
+                                ID #{{ inquilino.id }}
+                            </div>
+                        </div>
+                        <span class="badge bg-light text-dark border">
+                            {{ inquilino.contratos.count() if inquilino.contratos else 0 }} contrato(s)
+                        </span>
+                    </div>
+
+                    <div class="small mb-2">
+                        <strong>DNI/NIE:</strong> {{ inquilino.dni or 'No informado' }}
+                    </div>
+                    <div class="small mb-2">
+                        <strong>Teléfono:</strong> {{ inquilino.telefono or 'No informado' }}
+                    </div>
+                    <div class="small mb-3">
+                        <strong>Email:</strong> {{ inquilino.email or 'No informado' }}
+                    </div>
+
+                    <div class="d-flex flex-wrap gap-2">
+                        <a href="{{ url_for('alquileres.ver_inquilino', id=inquilino.id) }}"
+                           class="btn btn-outline-primary btn-sm">
+                            <i class="bi bi-eye"></i> Ver ficha
+                        </a>
+
+                        <a href="{{ url_for('alquileres.editar_inquilino', id=inquilino.id) }}"
+                           class="btn btn-outline-warning btn-sm">
+                            <i class="bi bi-pencil"></i> Editar
+                        </a>
+
+                        <form method="POST"
+                              action="{{ url_for('alquileres.eliminar_inquilino', id=inquilino.id) }}"
+                              onsubmit="return confirm('¿Eliminar este inquilino?')"
+                              class="d-inline">
+                            <button type="submit" class="btn btn-outline-danger btn-sm">
+                                <i class="bi bi-trash"></i> Eliminar
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="card shadow-sm border-0">
+        <div class="card-body">
+            <div class="alert alert-info mb-0">
+                No hay inquilinos registrados todavía.
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}

@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1>
+        <i class="bi bi-door-open"></i> Habitaciones de {{ propiedad.nombre }}
+        <small class="text-muted fs-5">{{ habitaciones|length }} habitaciones</small>
+    </h1>
+    <div>
+        <a href="{{ url_for('habitaciones.nueva', propiedad_id=propiedad.id) }}" class="btn btn-success">
+            <i class="bi bi-plus-circle"></i> Nueva habitación
+        </a>
+        <a href="{{ url_for('propiedades.ver', id=propiedad.id) }}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Volver a la propiedad
+        </a>
+    </div>
+</div>
+
+<!-- Resumen rápido -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card text-white bg-primary">
+            <div class="card-body">
+                <h5 class="card-title">Total habitaciones</h5>
+                <p class="card-text display-6">{{ habitaciones|length }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-success">
+            <div class="card-body">
+                <h5 class="card-title">Activas</h5>
+                <p class="card-text display-6">{{ habitaciones|selectattr('activa', 'equalto', true)|list|length }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-warning">
+            <div class="card-body">
+                <h5 class="card-title">Capacidad total</h5>
+                <p class="card-text display-6">{{ habitaciones|sum(attribute='capacidad') }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-info">
+            <div class="card-body">
+                <h5 class="card-title">Precio medio/noche</h5>
+                <p class="card-text display-6">{{ (habitaciones|sum(attribute='precio_base') / habitaciones|length)|round(2) if habitaciones else 0 }} €</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if habitaciones %}
+<div class="table-responsive">
+    <table class="table table-striped table-hover">
+        <thead>
+            <tr>
+                <th>Orden</th>
+                <th>Nombre</th>
+                <th>Tipo</th>
+                <th>Capacidad</th>
+                <th>Baño suite</th>
+                <th>Camas</th>
+                <th>Precio/noche</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for h in habitaciones %}
+            <tr class="{{ 'table-secondary' if not h.activa }}">
+                <td>{{ h.orden }}</td>
+                <td><strong>{{ h.nombre }}</strong></td>
+                <td>{{ h.tipo|capitalize }}</td>
+                <td>{{ h.capacidad }} pers.</td>
+                <td>
+                    {% if h.tiene_bano_suite %}
+                    <span class="badge bg-success"><i class="bi bi-check-lg"></i> Sí</span>
+                    {% else %}
+                    <span class="badge bg-secondary">No</span>
+                    {% endif %}
+                </td>
+                <td>{{ h.camas or '—' }}</td>
+                <td><strong>{{ h.precio_base }} €</strong></td>
+                <td>
+                    {% if h.activa %}
+                    <span class="badge bg-success">Activa</span>
+                    {% else %}
+                    <span class="badge bg-secondary">Inactiva</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <div class="btn-group btn-group-sm" role="group">
+                        <a href="{{ url_for('habitaciones.editar', id=h.id) }}" class="btn btn-warning" title="Editar">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                        <form action="{{ url_for('habitaciones.eliminar', id=h.id) }}" method="POST" class="d-inline">
+                            <button type="submit" class="btn btn-danger" onclick="return confirm('¿Eliminar esta habitación?')" title="Eliminar">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </form>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="alert alert-info">
+    <i class="bi bi-info-circle"></i> No hay habitaciones creadas para esta propiedad.
+    <a href="{{ url_for('habitaciones.nueva', propiedad_id=propiedad.id) }}" class="alert-link">Crea la primera habitación</a>.
+</div>
+{% endif %}
+{% endblock %}

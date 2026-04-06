@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Producción vacacional</title>
+    <style>
+        body { font-family: Arial, sans-serif; color: #333; margin: 24px; }
+        h1 { border-bottom: 2px solid #0d6efd; padding-bottom: 8px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 14px; }
+        th, td { border: 1px solid #ddd; padding: 8px; font-size: 12px; }
+        th { background: #f1f3f5; text-align: left; }
+        .box { background: #f8f9fa; padding: 12px; margin: 14px 0; }
+    </style>
+</head>
+<body>
+    <h1>Producción vacacional</h1>
+    <p>
+        <strong>Período:</strong>
+        {{ fecha_inicio.strftime('%d/%m/%Y') if fecha_inicio else '...' }} -
+        {{ fecha_fin.strftime('%d/%m/%Y') if fecha_fin else '...' }}
+    </p>
+
+    <div class="box">
+        <p><strong>Total reservas:</strong> {{ reservas|length }}</p>
+        <p><strong>Ingresos:</strong> {{ "%.2f"|format(reservas|sum(attribute='precio_total')) }} €</p>
+        <p><strong>Cobrado:</strong> {{ "%.2f"|format(reservas|sum(attribute='deposito_pagado')) }} €</p>
+        <p><strong>Pendiente:</strong> {{ "%.2f"|format(reservas|sum(attribute='saldo_pendiente')) }} €</p>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Huésped</th>
+                <th>Propiedad</th>
+                <th>Entrada</th>
+                <th>Salida</th>
+                <th>Noches</th>
+                <th>Total</th>
+                <th>Pagado</th>
+                <th>Pendiente</th>
+                <th>Estado</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for r in reservas %}
+            <tr>
+                <td>#{{ r.id }}</td>
+                <td>{{ r.huesped_nombre }} {{ r.huesped_apellidos }}</td>
+                <td>{{ r.propiedad.nombre if r.propiedad else '-' }}</td>
+                <td>{{ r.fecha_entrada.strftime('%d/%m/%Y') }}</td>
+                <td>{{ r.fecha_salida.strftime('%d/%m/%Y') }}</td>
+                <td>{{ (r.fecha_salida - r.fecha_entrada).days }}</td>
+                <td>{{ "%.2f"|format(r.precio_total or 0) }} €</td>
+                <td>{{ "%.2f"|format(r.deposito_pagado or 0) }} €</td>
+                <td>{{ "%.2f"|format(r.saldo_pendiente or 0) }} €</td>
+                <td>{{ (r.estado or 'sin estado')|upper }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>

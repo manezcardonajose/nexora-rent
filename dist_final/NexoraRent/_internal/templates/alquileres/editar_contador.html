@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block title %}Editar contador{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-3 px-lg-4">
+    <div class="card shadow-sm">
+        <div class="card-header bg-warning">
+            <h5 class="mb-0"><i class="bi bi-pencil"></i> Editar contador</h5>
+        </div>
+        <div class="card-body">
+            <form method="POST">
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Propiedad</label>
+                        <select name="propiedad_id" class="form-select" required>
+                            {% for propiedad in propiedades %}
+                            <option value="{{ propiedad.id }}" {% if contador.propiedad_id == propiedad.id %}selected{% endif %}>
+                                {{ propiedad.nombre }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Tipo</label>
+                        <select name="tipo" class="form-select" required>
+                            <option value="agua" {% if contador.tipo == 'agua' %}selected{% endif %}>Agua</option>
+                            <option value="luz" {% if contador.tipo == 'luz' %}selected{% endif %}>Luz</option>
+                            <option value="gas" {% if contador.tipo == 'gas' %}selected{% endif %}>Gas</option>
+                            <option value="otro" {% if contador.tipo == 'otro' %}selected{% endif %}>Otro</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Activo</label>
+                        <select name="activo" class="form-select">
+                            <option value="1" {% if contador.activo %}selected{% endif %}>Sí</option>
+                            <option value="0" {% if not contador.activo %}selected{% endif %}>No</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Nombre</label>
+                        <input type="text" name="nombre" class="form-control" value="{{ contador.nombre }}" required>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Número de serie</label>
+                        <input type="text" name="numero_serie" class="form-control" value="{{ contador.numero_serie or '' }}">
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-between mt-3">
+                    <a href="{{ url_for('alquileres.contadores') }}" class="btn btn-secondary">Volver</a>
+                    <button type="submit" class="btn btn-success">Guardar cambios</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

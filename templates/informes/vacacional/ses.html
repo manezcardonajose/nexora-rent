@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+{% block title %}SES / Viajeros{% endblock %}
+
+{% block content %}
+<div class="print-only mb-4">
+    <h2 style="margin:0;">NEXORA RENT</h2>
+    <p style="margin:0;">Informe SES / Viajeros</p>
+    <p style="margin:0;">Generado el {{ now().strftime("%d/%m/%Y") }}</p>
+    <hr>
+</div>
+
+<div class="container-fluid px-3 px-lg-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-4 no-print">
+        <div>
+            <h2 class="mb-1"><i class="bi bi-person-vcard"></i> SES / Viajeros</h2>
+            <p class="text-muted mb-0">Control de reservas listas para exportación de viajeros</p>
+        </div>
+        {% include "informes/_acciones_informe.html" %}
+    </div>
+
+    <form method="GET" class="card shadow-sm mb-4 no-print">
+        <div class="card-body">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-3"><label class="form-label">Desde</label><input type="date" name="fecha_inicio" class="form-control" value="{{ fecha_inicio }}"></div>
+                <div class="col-md-3"><label class="form-label">Hasta</label><input type="date" name="fecha_fin" class="form-control" value="{{ fecha_fin }}"></div>
+                <div class="col-md-3">
+                    <label class="form-label">Estado</label>
+                    <select name="estado" class="form-select">
+                        <option value="">Todos</option>
+                        <option value="confirmada" {% if estado == 'confirmada' %}selected{% endif %}>Confirmada</option>
+                        <option value="pendiente" {% if estado == 'pendiente' %}selected{% endif %}>Pendiente</option>
+                        <option value="cancelada" {% if estado == 'cancelada' %}selected{% endif %}>Cancelada</option>
+                    </select>
+                </div>
+                <div class="col-md-3 d-grid"><button type="submit" class="btn btn-primary"><i class="bi bi-funnel"></i> Filtrar</button></div>
+            </div>
+        </div>
+    </form>
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-4"><div class="kpi-box"><div>Reservas analizadas</div><strong>{{ total_reservas }}</strong></div></div>
+        <div class="col-md-4"><div class="kpi-box success"><div>Listas para SES</div><strong>{{ total_completas }}</strong></div></div>
+        <div class="col-md-4"><div class="kpi-box danger"><div>Con errores</div><strong>{{ total_incompletas }}</strong></div></div>
+    </div>
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-success text-white"><strong>Reservas completas</strong></div>
+        <div class="card-body">
+            {% if completas %}
+            <div class="table-responsive">
+                <table class="table table-bordered align-middle informe-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Propiedad</th>
+                            <th>Entrada</th>
+                            <th>Salida</th>
+                            <th class="text-center">Huéspedes</th>
+                            <th class="text-center no-print">TXT</th>
+                            <th class="text-center no-print">XML</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in completas %}
+                        {% set r = item.reserva %}
+                        <tr>
+                            <td>#{{ r.id }}</td>
+                            <td>{{ r.propiedad.nombre if r.propiedad else '' }}</td>
+                            <td>{{ r.fecha_entrada }}</td>
+                            <td>{{ r.fecha_salida }}</td>
+                            <td class="text-center">{{ item.total_huespedes }}</td>
+                            <td class="text-center no-print">
+                                <a href="{{ url_for('informes.exportar_ses', reserva_id=r.id) }}" class="btn btn-sm btn-outline-primary">TXT</a>
+                            </td>
+                            <td class="text-center no-print">
+                                <a href="{{ url_for('informes.exportar_ses_xml', reserva_id=r.id) }}" class="btn btn-sm btn-outline-success">XML</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="alert alert-info mb-0">No hay reservas completas para exportar.</div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-header bg-danger text-white"><strong>Reservas con datos incompletos</strong></div>
+        <div class="card-body">
+            {% if incompletas %}
+            <div class="accordion" id="accordionSesErrores">
+                {% for item in incompletas %}
+                {% set r = item.reserva %}
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="heading{{ r.id }}">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ r.id }}">
+                            Reserva #{{ r.id }} — {{ r.propiedad.nombre if r.propiedad else '' }} — {{ r.fecha_entrada }} / {{ r.fecha_salida }}
+                        </button>
+                    </h2>
+                    <div id="collapse{{ r.id }}" class="accordion-collapse collapse" data-bs-parent="#accordionSesErrores">
+                        <div class="accordion-body">
+                            <ul class="mb-0">
+                                {% for error in item.errores %}
+                                <li>{{ error }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="alert alert-success mb-0">No hay errores en los datos de viajeros.</div>
+            {% endif %}
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.kpi-box { background:#f8fafc; padding:12px; border-radius:10px; text-align:center; }
+.kpi-box strong { display:block; font-size:1.2rem; }
+.kpi-box.success { background:#e6f7ee; }
+.kpi-box.danger { background:#fdecec; }
+.informe-table th { background:#f1f5f9; font-size:.82rem; text-transform:uppercase; }
+@media print {
+    body { font-size:11px; }
+    .kpi-box { border:1px solid #ddd; background:white !important; }
+    table { font-size:10px; }
+    thead { display:table-header-group; }
+    tr { page-break-inside:avoid; }
+}
+</style>
+{% endblock %}

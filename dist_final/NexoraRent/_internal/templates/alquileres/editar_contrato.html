@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% block title %}Editar contrato base{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1">Editar contrato base #{{ contrato.id }}</h2>
+            <p class="text-muted mb-0">Datos operativos del alquiler de larga duración</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{{ url_for('alquileres.contratos') }}" class="btn btn-outline-secondary">Volver</a>
+            <a href="{{ url_for('contratos.editar_contrato', contrato_id=contrato.id) }}" class="btn btn-outline-primary">
+                Ir a documentación contractual
+            </a>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <form method="POST">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Propiedad</label>
+                        <select name="propiedad_id" class="form-select" required>
+                            {% for propiedad in propiedades %}
+                            <option value="{{ propiedad.id }}" {% if contrato.propiedad_id == propiedad.id %}selected{% endif %}>
+                                {{ propiedad.nombre }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Inquilino</label>
+                        <select name="inquilino_id" class="form-select" required>
+                            {% for inquilino in inquilinos %}
+                            <option value="{{ inquilino.id }}" {% if contrato.inquilino_id == inquilino.id %}selected{% endif %}>
+                                {{ inquilino.nombre }} {{ inquilino.apellidos or '' }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label">Fecha inicio</label>
+                        <input type="date" name="fecha_inicio" class="form-control" value="{{ contrato.fecha_inicio }}">
+                    </div>
+
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label">Fecha fin</label>
+                        <input type="date" name="fecha_fin" class="form-control" value="{{ contrato.fecha_fin or '' }}">
+                    </div>
+
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label">Renta mensual</label>
+                        <input type="number" step="0.01" name="renta_mensual" class="form-control" value="{{ contrato.renta_mensual or 0 }}">
+                    </div>
+
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label">Fianza</label>
+                        <input type="number" step="0.01" name="fianza" class="form-control" value="{{ contrato.fianza or 0 }}">
+                    </div>
+
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label">Meses adelantados</label>
+                        <input type="number" name="meses_adelantados" class="form-control" value="{{ contrato.meses_adelantados or 0 }}">
+                    </div>
+
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label">Importe adelantado</label>
+                        <input type="number" step="0.01" name="importe_meses_adelantados" class="form-control" value="{{ contrato.importe_meses_adelantados or 0 }}">
+                    </div>
+
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label">Estado</label>
+                        <select name="estado" class="form-select">
+                            <option value="activo" {% if contrato.estado == 'activo' %}selected{% endif %}>Activo</option>
+                            <option value="finalizado" {% if contrato.estado == 'finalizado' %}selected{% endif %}>Finalizado</option>
+                            <option value="cancelado" {% if contrato.estado == 'cancelado' %}selected{% endif %}>Cancelado</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-12 mb-3">
+                        <label class="form-label">Observaciones</label>
+                        <textarea name="observaciones" class="form-control" rows="3">{{ contrato.observaciones or '' }}</textarea>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-end gap-2">
+                    <a href="{{ url_for('alquileres.contratos') }}" class="btn btn-secondary">Cancelar</a>
+                    <button type="submit" class="btn btn-success">Guardar cambios</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

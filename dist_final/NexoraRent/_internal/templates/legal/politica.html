@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container py-4">
+    <h1 class="mb-4">Política de Privacidad</h1>
+
+    <div class="alert alert-info">
+        <i class="bi bi-info-circle"></i> Última actualización: marzo 2026
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-body">
+            <p>En <strong>Gestor de Alquiler Vacacional</strong>, nos tomamos muy en serio la privacidad y la protección de los datos personales de nuestros usuarios y de los huéspedes que se alojan en las propiedades gestionadas a través de la aplicación.</p>
+        </div>
+    </div>
+
+    <h2>1. ¿Qué datos recogemos?</h2>
+    <p>La aplicación recopila los siguientes datos personales:</p>
+    <ul>
+        <li><strong>Datos identificativos:</strong> nombre, apellidos, sexo, fecha de nacimiento, nacionalidad.</li>
+        <li><strong>Documentos de identidad:</strong> tipo de documento (DNI, NIE, pasaporte), número de documento y número de soporte.</li>
+        <li><strong>Domicilio habitual:</strong> dirección completa, ciudad, código postal, país.</li>
+        <li><strong>Datos de contacto:</strong> teléfono móvil y correo electrónico.</li>
+        <li><strong>Datos de reserva:</strong> fechas de estancia, habitaciones seleccionadas, número de viajeros, menores, parentesco.</li>
+        <li><strong>Datos económicos:</strong> precios, pagos realizados y pendientes.</li>
+        <li><strong>Datos de uso:</strong> registros de acceso, acciones realizadas en la aplicación, dirección IP.</li>
+    </ul>
+
+    <h2>2. ¿Con qué finalidad tratamos sus datos?</h2>
+    <ul>
+        <li><strong>Cumplir con la legislación turística:</strong> registrar a todos los viajeros en el sistema SES.HOSPEDAJES (obligatorio en España).</li>
+        <li><strong>Gestionar las reservas:</strong> confirmar disponibilidad, asignar habitaciones, emitir documentos y facturas.</li>
+        <li><strong>Gestionar los pagos:</strong> controlar los ingresos y el saldo pendiente de cada reserva.</li>
+        <li><strong>Mejorar el servicio:</strong> analizar la ocupación, generar informes, atender consultas.</li>
+        <li><strong>Seguridad:</strong> detectar accesos no autorizados y mantener un registro de auditoría.</li>
+    </ul>
+
+    <h2>3. Base legal del tratamiento</h2>
+    <p>El tratamiento de sus datos se fundamenta en:</p>
+    <ul>
+        <li><strong>Cumplimiento de una obligación legal:</strong> normativa de registro de viajeros (Real Decreto 933/2021).</li>
+        <li><strong>Ejecución de un contrato:</strong> la reserva turística y los pagos asociados.</li>
+        <li><strong>Consentimiento explícito del interesado:</strong> al registrarse como usuario o al añadir un huésped.</li>
+        <li><strong>Interés legítimo:</strong> para la seguridad de la plataforma y la mejora continua del servicio.</li>
+    </ul>
+
+    <h2>4. Medidas de seguridad implementadas</h2>
+    <ul>
+        <li><strong>Cifrado de datos sensibles:</strong> los números de documento se almacenan cifrados mediante algoritmos seguros.</li>
+        <li><strong>Registro de auditoría:</strong> todas las acciones importantes quedan registradas con fecha, IP y datos modificados.</li>
+        <li><strong>Control de accesos:</strong> cada usuario solo ve sus propias propiedades y datos asociados.</li>
+        <li><strong>Protección de sesiones:</strong> las contraseñas se almacenan con hash seguro.</li>
+    </ul>
+
+    <h2>5. Derechos de los interesados</h2>
+    <p>Usted tiene derecho a:</p>
+    <ul>
+        <li><strong>Acceder</strong> a sus datos personales.</li>
+        <li><strong>Rectificarlos</strong> si son incorrectos.</li>
+        <li><strong>Suprimirlos</strong> (derecho al olvido).</li>
+        <li><strong>Oponerse</strong> al tratamiento.</li>
+        <li><strong>Limitar el tratamiento</strong>.</li>
+        <li><strong>Portabilidad</strong> de sus datos.</li>
+        <li><strong>Retirar el consentimiento</strong> en cualquier momento.</li>
+    </ul>
+    <p>Para ejercer sus derechos, puede hacerlo a través de la opción "Mi perfil" en la aplicación.</p>
+
+    <h2>6. Plazos de conservación</h2>
+    <p>Los datos se conservarán durante el tiempo necesario para cumplir con las obligaciones legales (mínimo 3 años según la normativa de registro de viajeros).</p>
+
+    <h2>7. Contacto</h2>
+    <p>Si tiene cualquier duda sobre cómo tratamos sus datos, puede escribirnos a:</p>
+    <ul>
+        <li><strong>Email:</strong> privacidad@gestoralquiler.es</li>
+    </ul>
+
+    <div class="alert alert-warning mt-4">
+        <i class="bi bi-exclamation-triangle"></i> Esta política de privacidad está en cumplimiento con el Reglamento General de Protección de Datos (GDPR) y la Ley Orgánica de Protección de Datos y Garantía de los Derechos Digitales (LOPDGDD).
+    </div>
+</div>
+{% endblock %}

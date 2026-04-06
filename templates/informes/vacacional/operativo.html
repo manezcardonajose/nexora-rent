@@ -1,0 +1,220 @@
+{% extends "base.html" %}
+{% block title %}Operativo vacacional{% endblock %}
+
+{% block content %}
+<div class="print-only mb-4">
+    <h2 style="margin:0;">NEXORA RENT</h2>
+    <p style="margin:0;">Informe Operativo Vacacional</p>
+    <p style="margin:0;">Generado el {{ now().strftime("%d/%m/%Y") }}</p>
+    <hr>
+</div>
+
+<div class="container-fluid px-3 px-lg-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-4 no-print">
+        <div>
+            <h2 class="mb-1"><i class="bi bi-tools"></i> Operativo vacacional</h2>
+            <p class="text-muted mb-0">Control diario de entradas, salidas, ocupación y limpiezas</p>
+        </div>
+        {% include "informes/_acciones_informe.html" %}
+    </div>
+
+    <form method="GET" class="card shadow-sm mb-4 no-print">
+        <div class="card-body">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-4">
+                    <label class="form-label">Fecha</label>
+                    <input type="date" name="fecha" class="form-control" value="{{ fecha }}">
+                </div>
+
+                <div class="col-md-4">
+                    <label class="form-label">Propiedad</label>
+                    <select name="propiedad_id" class="form-select">
+                        <option value="">Todas</option>
+                        {% for p in propiedades %}
+                        <option value="{{ p.id }}" {% if propiedad_id == p.id %}selected{% endif %}>{{ p.nombre }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-md-4 d-grid">
+                    <button type="submit" class="btn btn-primary"><i class="bi bi-funnel"></i> Filtrar</button>
+                </div>
+            </div>
+        </div>
+    </form>
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-4 col-xl-2"><div class="kpi-box info"><div>Check-in hoy</div><strong>{{ total_checkins }}</strong></div></div>
+        <div class="col-md-4 col-xl-2"><div class="kpi-box warning"><div>Check-out hoy</div><strong>{{ total_checkouts }}</strong></div></div>
+        <div class="col-md-4 col-xl-2"><div class="kpi-box success"><div>Ocupadas</div><strong>{{ total_ocupadas }}</strong></div></div>
+        <div class="col-md-4 col-xl-2"><div class="kpi-box"><div>Libres</div><strong>{{ total_libres }}</strong></div></div>
+        <div class="col-md-4 col-xl-2"><div class="kpi-box danger"><div>Limpieza hoy</div><strong>{{ total_limpieza }}</strong></div></div>
+    </div>
+
+    <div class="row g-4">
+
+        <div class="col-lg-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white"><strong>Check-in hoy</strong></div>
+                <div class="card-body">
+                    {% if checkins_hoy %}
+                    <div class="table-responsive">
+                        <table class="table table-bordered align-middle mb-0 informe-table">
+                            <thead><tr><th>Propiedad</th><th>Huésped</th><th>Entrada</th><th>Noches</th><th>Estado</th></tr></thead>
+                            <tbody>
+                                {% for r in checkins_hoy %}
+                                <tr>
+                                    <td>{{ r.propiedad.nombre if r.propiedad else '' }}</td>
+                                    <td>{{ (r.huesped_nombre ~ ' ' ~ r.huesped_apellidos).strip() if r.huesped_nombre is defined else '' }}</td>
+                                    <td>{{ r.fecha_entrada }}</td>
+                                    <td>{{ (r.fecha_salida - r.fecha_entrada).days }}</td>
+                                    <td>{{ r.estado }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-info mb-0">No hay entradas para hoy.</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-warning text-dark"><strong>Check-out hoy</strong></div>
+                <div class="card-body">
+                    {% if checkouts_hoy %}
+                    <div class="table-responsive">
+                        <table class="table table-bordered align-middle mb-0 informe-table">
+                            <thead><tr><th>Propiedad</th><th>Huésped</th><th>Salida</th><th>Estado</th></tr></thead>
+                            <tbody>
+                                {% for r in checkouts_hoy %}
+                                <tr>
+                                    <td>{{ r.propiedad.nombre if r.propiedad else '' }}</td>
+                                    <td>{{ (r.huesped_nombre ~ ' ' ~ r.huesped_apellidos).strip() if r.huesped_nombre is defined else '' }}</td>
+                                    <td>{{ r.fecha_salida }}</td>
+                                    <td>{{ r.estado }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-info mb-0">No hay salidas para hoy.</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-success text-white"><strong>Propiedades ocupadas hoy</strong></div>
+                <div class="card-body">
+                    {% if ocupadas_hoy %}
+                    <div class="table-responsive">
+                        <table class="table table-bordered align-middle mb-0 informe-table">
+                            <thead><tr><th>Propiedad</th><th>Huésped</th><th>Hasta</th></tr></thead>
+                            <tbody>
+                                {% for r in ocupadas_hoy %}
+                                <tr>
+                                    <td>{{ r.propiedad.nombre if r.propiedad else '' }}</td>
+                                    <td>{{ (r.huesped_nombre ~ ' ' ~ r.huesped_apellidos).strip() if r.huesped_nombre is defined else '' }}</td>
+                                    <td>{{ r.fecha_salida }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-info mb-0">No hay propiedades ocupadas hoy.</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-danger text-white"><strong>Limpieza / preparación hoy</strong></div>
+                <div class="card-body">
+                    {% if limpieza_hoy %}
+                    <ul class="list-group">
+                        {% for p in limpieza_hoy %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            {{ p.nombre }}
+                            <span class="badge bg-danger">Preparar</span>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    {% else %}
+                    <div class="alert alert-info mb-0">No hay limpiezas pendientes para hoy.</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-info text-white"><strong>Llegadas mañana</strong></div>
+                <div class="card-body">
+                    {% if llegadas_manana %}
+                    <ul class="list-group">
+                        {% for r in llegadas_manana %}
+                        <li class="list-group-item">
+                            <strong>{{ r.propiedad.nombre if r.propiedad else '' }}</strong>
+                            — {{ (r.huesped_nombre ~ ' ' ~ r.huesped_apellidos).strip() if r.huesped_nombre is defined else '' }}
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    {% else %}
+                    <div class="alert alert-info mb-0">No hay llegadas mañana.</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-secondary text-white"><strong>Salidas mañana</strong></div>
+                <div class="card-body">
+                    {% if salidas_manana %}
+                    <ul class="list-group">
+                        {% for r in salidas_manana %}
+                        <li class="list-group-item">
+                            <strong>{{ r.propiedad.nombre if r.propiedad else '' }}</strong>
+                            — {{ (r.huesped_nombre ~ ' ' ~ r.huesped_apellidos).strip() if r.huesped_nombre is defined else '' }}
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    {% else %}
+                    <div class="alert alert-info mb-0">No hay salidas mañana.</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.kpi-box { background:#f8fafc; padding:12px; border-radius:10px; text-align:center; }
+.kpi-box strong { display:block; font-size:1.2rem; }
+.kpi-box.success { background:#e6f7ee; }
+.kpi-box.warning { background:#fff4e5; }
+.kpi-box.danger { background:#fdecec; }
+.kpi-box.info { background:#e6f0ff; }
+.informe-table th { background:#f1f5f9; font-size:.82rem; text-transform:uppercase; }
+@media print {
+    body { font-size:11px; }
+    .kpi-box { border:1px solid #ddd; background:white !important; }
+    table { font-size:10px; }
+    thead { display:table-header-group; }
+    tr { page-break-inside:avoid; }
+}
+</style>
+{% endblock %}

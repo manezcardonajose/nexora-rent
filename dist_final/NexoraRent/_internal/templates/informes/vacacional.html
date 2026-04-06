@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="print-only mb-3">
+    <h2>NEXORA RENT</h2>
+    <p>Informe generado el {{ now().strftime("%d/%m/%Y") }}</p>
+    <hr>
+</div>
+
+{% include "informes/_acciones_informe.html" %}
+
+<div class="container mt-4">
+
+    <h2>📊 Informe Vacacional</h2>
+
+    <!-- FILTROS -->
+    <form method="get" class="row mb-4">
+
+        <div class="col">
+            <input type="date" name="fecha_inicio" class="form-control">
+        </div>
+
+        <div class="col">
+            <input type="date" name="fecha_fin" class="form-control">
+        </div>
+
+        <div class="col">
+            <select name="propiedad_id" class="form-control">
+                <option value="">Todas</option>
+                {% for p in propiedades %}
+                <option value="{{ p.id }}">{{ p.nombre }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="col">
+            <button class="btn btn-primary">Filtrar</button>
+        </div>
+
+    </form>
+
+    <!-- RESUMEN -->
+    <div class="row text-center mb-4">
+
+        <div class="col">
+            <div class="card p-3">
+                <h5>Reservas</h5>
+                <h3>{{ total_reservas }}</h3>
+            </div>
+        </div>
+
+        <div class="col">
+            <div class="card p-3">
+                <h5>Ingresos</h5>
+                <h3>{{ total_ingresos }} €</h3>
+            </div>
+        </div>
+
+        <div class="col">
+            <div class="card p-3">
+                <h5>Pagado</h5>
+                <h3>{{ total_pagado }} €</h3>
+            </div>
+        </div>
+
+        <div class="col">
+            <div class="card p-3">
+                <h5>Pendiente</h5>
+                <h3>{{ pendiente }} €</h3>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- TABLA -->
+    <table class="table table-striped">
+
+        <thead>
+            <tr>
+                <th>Propiedad</th>
+                <th>Entrada</th>
+                <th>Salida</th>
+                <th>Total</th>
+                <th>Estado</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            {% for r in reservas %}
+            <tr>
+                <td>{{ r.propiedad.nombre }}</td>
+                <td>{{ r.fecha_entrada }}</td>
+                <td>{{ r.fecha_salida }}</td>
+                <td>{{ r.total }} €</td>
+                <td>{{ r.estado }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+
+    </table>
+
+</div>
+
+{% endblock %}

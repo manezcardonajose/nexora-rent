@@ -1,0 +1,585 @@
+{% extends "base.html" %}
+
+{% block title %}Panel financiero · NEXORA RENT{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+
+    <div class="mb-4">
+        <h2 class="fw-bold mb-1">Panel financiero</h2>
+        <p class="text-muted mb-0">Resumen económico, evolución mensual y rentabilidad del negocio.</p>
+    </div>
+
+    <div class="row g-4 mb-4">
+
+        <div class="col-md-4">
+            <div class="card finance-kpi finance-kpi-income h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <div class="finance-kpi-label">Ingresos totales</div>
+                            <div class="finance-kpi-value">{{ "%.2f"|format(total_ingresos or 0) }} €</div>
+                            <div class="finance-kpi-sub">Total acumulado registrado</div>
+                        </div>
+                        <div class="finance-kpi-icon">
+                            <i class="bi bi-cash-stack"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card finance-kpi finance-kpi-expense h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <div class="finance-kpi-label">Gastos totales</div>
+                            <div class="finance-kpi-value">{{ "%.2f"|format(total_gastos or 0) }} €</div>
+                            <div class="finance-kpi-sub">Costes directos e indirectos</div>
+                        </div>
+                        <div class="finance-kpi-icon">
+                            <i class="bi bi-cart4"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card finance-kpi {% if (total_beneficio or 0) >= 0 %}finance-kpi-profit{% else %}finance-kpi-loss{% endif %} h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <div class="finance-kpi-label">Beneficio neto</div>
+                            <div class="finance-kpi-value">{{ "%.2f"|format(total_beneficio or 0) }} €</div>
+                            <div class="finance-kpi-sub">
+                                {% if (total_beneficio or 0) >= 0 %}
+                                    Resultado positivo del negocio
+                                {% else %}
+                                    Resultado por debajo de ingresos
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="finance-kpi-icon">
+                            {% if (total_beneficio or 0) >= 0 %}
+                            <i class="bi bi-graph-up-arrow"></i>
+                            {% else %}
+                            <i class="bi bi-graph-down-arrow"></i>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="row g-4 mb-4">
+
+        <div class="col-lg-8">
+            <div class="card finance-panel h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div>
+                            <h5 class="mb-1 fw-semibold">Evolución mensual</h5>
+                            <p class="text-muted small mb-0">Ingresos, gastos y beneficio por mes</p>
+                        </div>
+                    </div>
+
+                    {% if chart_labels %}
+                    <div style="height: 360px;">
+                        <canvas id="chartFinanzas"></canvas>
+                    </div>
+                    {% else %}
+                    <div class="empty-box">
+                        <i class="bi bi-bar-chart-line"></i>
+                        <p class="mb-0">Todavía no hay datos suficientes para mostrar la evolución mensual.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card finance-panel h-100">
+                <div class="card-body">
+                    <h5 class="fw-semibold mb-3">Lectura rápida</h5>
+
+                    <div class="finance-mini-stat">
+                        <span>Margen estimado</span>
+                        <strong>
+                            {% if (total_ingresos or 0) > 0 %}
+                                {{ "%.2f"|format(((total_beneficio or 0) / (total_ingresos or 1)) * 100) }} %
+                            {% else %}
+                                0.00 %
+                            {% endif %}
+                        </strong>
+                    </div>
+
+                    <div class="finance-mini-stat">
+                        <span>Meses analizados</span>
+                        <strong>{{ resumen_mensual|length }}</strong>
+                    </div>
+
+                    <div class="finance-mini-stat">
+                        <span>Últimos ingresos</span>
+                        <strong>{{ ultimos_ingresos|length }}</strong>
+                    </div>
+
+                    <div class="finance-mini-stat">
+                        <span>Últimos gastos</span>
+                        <strong>{{ ultimos_gastos|length }}</strong>
+                    </div>
+
+                    <div class="finance-mini-stat">
+                        <span>Reservas rentables analizadas</span>
+                        <strong>{{ rentabilidad_reservas|length }}</strong>
+                    </div>
+
+                    <hr>
+
+                    <div class="finance-summary-box {% if (total_beneficio or 0) >= 0 %}positive{% else %}negative{% endif %}">
+                        <div class="small mb-1">Estado financiero actual</div>
+                        <div class="fw-bold">
+                            {% if (total_beneficio or 0) >= 0 %}
+                                Negocio en positivo
+                            {% else %}
+                                Negocio con margen negativo
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="card finance-panel mb-4">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <h5 class="mb-1 fw-semibold">Resultado por propiedad</h5>
+                    <p class="text-muted small mb-0">Comparativa de ingresos, gastos y recomendación</p>
+                </div>
+            </div>
+
+            {% if propiedades_resumen %}
+            <div class="table-responsive">
+                <table class="table finance-table align-middle">
+                    <thead>
+                        <tr>
+                            <th>Propiedad</th>
+                            <th class="text-end">Ingresos</th>
+                            <th class="text-end">Gastos</th>
+                            <th class="text-end">Beneficio</th>
+                            <th>Recomendación</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in propiedades_resumen %}
+                        <tr>
+                            <td>
+                                <div class="fw-semibold">{{ item.propiedad.nombre }}</div>
+                                <div class="text-muted small">{{ item.propiedad.ciudad or item.propiedad.municipio or '' }}</div>
+                            </td>
+                            <td class="text-end">{{ "%.2f"|format(item.ingresos or 0) }} €</td>
+                            <td class="text-end">{{ "%.2f"|format(item.gastos or 0) }} €</td>
+                            <td class="text-end">
+                                <span class="badge rounded-pill {% if (item.beneficio or 0) >= 0 %}text-bg-success{% else %}text-bg-danger{% endif %}">
+                                    {{ "%.2f"|format(item.beneficio or 0) }} €
+                                </span>
+                            </td>
+                            <td>
+                                {% if item.recomendacion == 'VACACIONAL' %}
+                                    <span class="badge text-bg-primary">Vacacional</span>
+                                {% elif item.recomendacion == 'LARGA DURACIÓN' %}
+                                    <span class="badge text-bg-warning text-dark">Larga duración</span>
+                                {% else %}
+                                    <span class="badge text-bg-secondary">Indiferente</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="empty-box">
+                <i class="bi bi-house"></i>
+                <p class="mb-0">No hay propiedades con datos financieros para mostrar.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="card finance-panel mb-4">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <h5 class="mb-1 fw-semibold">Rentabilidad por reserva</h5>
+                    <p class="text-muted small mb-0">Análisis estimado de ingresos y costes imputados por estancia</p>
+                </div>
+            </div>
+
+            {% if rentabilidad_reservas %}
+            <div class="table-responsive">
+                <table class="table finance-table align-middle">
+                    <thead>
+                        <tr>
+                            <th>Reserva</th>
+                            <th>Huésped</th>
+                            <th class="text-center">Noches</th>
+                            <th class="text-end">Ingresos</th>
+                            <th class="text-end">Coste est.</th>
+                            <th class="text-end">Beneficio</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in rentabilidad_reservas %}
+                        <tr>
+                            <td>
+                                <div class="fw-semibold">#{{ item.reserva.id }}</div>
+                                <div class="text-muted small">{{ item.reserva.propiedad.nombre if item.reserva.propiedad else '' }}</div>
+                            </td>
+                            <td>{{ item.huesped or 'Sin huésped' }}</td>
+                            <td class="text-center">{{ item.noches or 0 }}</td>
+                            <td class="text-end">{{ "%.2f"|format(item.ingresos or 0) }} €</td>
+                            <td class="text-end">{{ "%.2f"|format(item.gasto_estimado or 0) }} €</td>
+                            <td class="text-end">
+                                <span class="badge rounded-pill {% if (item.beneficio_estimado or 0) >= 0 %}text-bg-success{% else %}text-bg-danger{% endif %}">
+                                    {{ "%.2f"|format(item.beneficio_estimado or 0) }} €
+                                </span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="empty-box">
+                <i class="bi bi-calendar-check"></i>
+                <p class="mb-0">No hay reservas con información suficiente para calcular rentabilidad.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="row g-4 mb-4">
+
+        <div class="col-lg-6">
+            <div class="card finance-panel h-100">
+                <div class="card-body">
+                    <h5 class="fw-semibold mb-3">Últimos ingresos</h5>
+
+                    {% if ultimos_ingresos %}
+                    <div class="list-group list-group-flush finance-list">
+                        {% for item in ultimos_ingresos %}
+                        <div class="list-group-item px-0">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="fw-semibold">{{ item.concepto }}</div>
+                                    <div class="small text-muted">
+                                        {{ item.propiedad.nombre if item.propiedad else 'General' }} · {{ item.fecha }}
+                                    </div>
+                                </div>
+                                <div class="fw-bold text-success">
+                                    + {{ "%.2f"|format(item.cantidad or 0) }} €
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="empty-box small-empty">
+                        <i class="bi bi-cash"></i>
+                        <p class="mb-0">No hay ingresos recientes.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="card finance-panel h-100">
+                <div class="card-body">
+                    <h5 class="fw-semibold mb-3">Últimos gastos</h5>
+
+                    {% if ultimos_gastos %}
+                    <div class="list-group list-group-flush finance-list">
+                        {% for item in ultimos_gastos %}
+                        <div class="list-group-item px-0">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="fw-semibold">{{ item.concepto }}</div>
+                                    <div class="small text-muted">
+                                        {{ item.propiedad.nombre if item.propiedad else 'General' }} · {{ item.fecha }}
+                                    </div>
+                                </div>
+                                <div class="fw-bold text-danger">
+                                    - {{ "%.2f"|format(item.cantidad or 0) }} €
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="empty-box small-empty">
+                        <i class="bi bi-cart-x"></i>
+                        <p class="mb-0">No hay gastos recientes.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="card finance-panel mb-4">
+        <div class="card-body">
+            <h5 class="fw-semibold mb-3">Resumen mensual</h5>
+
+            {% if resumen_mensual %}
+            <div class="table-responsive">
+                <table class="table finance-table align-middle">
+                    <thead>
+                        <tr>
+                            <th>Mes</th>
+                            <th class="text-end">Ingresos</th>
+                            <th class="text-end">Gastos</th>
+                            <th class="text-end">Beneficio</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in resumen_mensual %}
+                        <tr>
+                            <td class="fw-semibold">{{ item.mes }}</td>
+                            <td class="text-end">{{ "%.2f"|format(item.ingresos or 0) }} €</td>
+                            <td class="text-end">{{ "%.2f"|format(item.gastos or 0) }} €</td>
+                            <td class="text-end">
+                                <span class="{% if (item.beneficio or 0) >= 0 %}text-success{% else %}text-danger{% endif %} fw-semibold">
+                                    {{ "%.2f"|format(item.beneficio or 0) }} €
+                                </span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="empty-box">
+                <i class="bi bi-calendar3"></i>
+                <p class="mb-0">No hay resumen mensual disponible todavía.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+</div>
+
+{% if chart_labels %}
+<script id="chart-labels-json" type="application/json">{{ chart_labels|tojson|safe }}</script>
+<script id="chart-ingresos-json" type="application/json">{{ chart_ingresos|tojson|safe }}</script>
+<script id="chart-gastos-json" type="application/json">{{ chart_gastos|tojson|safe }}</script>
+<script id="chart-beneficio-json" type="application/json">{{ chart_beneficio|tojson|safe }}</script>
+{% endif %}
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .finance-kpi {
+        border: 0;
+        border-radius: 18px;
+        color: #fff;
+        box-shadow: 0 14px 30px rgba(15, 23, 42, 0.10);
+        overflow: hidden;
+        position: relative;
+    }
+
+    .finance-kpi::after {
+        content: "";
+        position: absolute;
+        right: -20px;
+        bottom: -20px;
+        width: 90px;
+        height: 90px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.12);
+    }
+
+    .finance-kpi-income {
+        background: linear-gradient(135deg, #0f9d58, #34a853);
+    }
+
+    .finance-kpi-expense {
+        background: linear-gradient(135deg, #d93025, #ea4335);
+    }
+
+    .finance-kpi-profit {
+        background: linear-gradient(135deg, #1f5d96, #0b2545);
+    }
+
+    .finance-kpi-loss {
+        background: linear-gradient(135deg, #7b1f1f, #b3261e);
+    }
+
+    .finance-kpi-label {
+        font-size: 0.92rem;
+        opacity: 0.9;
+        margin-bottom: 0.35rem;
+    }
+
+    .finance-kpi-value {
+        font-size: 2rem;
+        font-weight: 800;
+        line-height: 1.1;
+        margin-bottom: 0.35rem;
+    }
+
+    .finance-kpi-sub {
+        font-size: 0.86rem;
+        opacity: 0.85;
+    }
+
+    .finance-kpi-icon {
+        font-size: 2rem;
+        opacity: 0.85;
+    }
+
+    .finance-panel {
+        border: 0;
+        border-radius: 18px;
+        box-shadow: 0 12px 28px rgba(15, 23, 42, 0.06);
+    }
+
+    .finance-mini-stat {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.7rem 0;
+        border-bottom: 1px solid #eef2f7;
+    }
+
+    .finance-mini-stat:last-child {
+        border-bottom: 0;
+    }
+
+    .finance-summary-box {
+        border-radius: 14px;
+        padding: 1rem;
+        font-size: 0.95rem;
+    }
+
+    .finance-summary-box.positive {
+        background: #e9f8ef;
+        color: #146c43;
+    }
+
+    .finance-summary-box.negative {
+        background: #fdecec;
+        color: #b42318;
+    }
+
+    .finance-table thead th {
+        border-bottom: 1px solid #e9eef5;
+        color: #5b6472;
+        font-size: 0.86rem;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+    }
+
+    .finance-table tbody td {
+        vertical-align: middle;
+        border-color: #f1f4f8;
+    }
+
+    .finance-list .list-group-item {
+        border-color: #eef2f7;
+    }
+
+    .empty-box {
+        min-height: 180px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        color: #7b8794;
+        background: #f8fafc;
+        border: 1px dashed #d7e0ea;
+        border-radius: 16px;
+        padding: 1.5rem;
+    }
+
+    .empty-box i {
+        font-size: 2rem;
+        margin-bottom: 0.75rem;
+    }
+
+    .small-empty {
+        min-height: 140px;
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+{% if chart_labels %}
+<script>
+    const ctxFinanzas = document.getElementById('chartFinanzas');
+
+    if (ctxFinanzas) {
+        const chartLabels = JSON.parse(document.getElementById('chart-labels-json').textContent);
+        const chartIngresos = JSON.parse(document.getElementById('chart-ingresos-json').textContent);
+        const chartGastos = JSON.parse(document.getElementById('chart-gastos-json').textContent);
+        const chartBeneficio = JSON.parse(document.getElementById('chart-beneficio-json').textContent);
+
+        new Chart(ctxFinanzas, {
+            type: 'bar',
+            data: {
+                labels: chartLabels,
+                datasets: [
+                    {
+                        label: 'Ingresos',
+                        data: chartIngresos,
+                        borderWidth: 1
+                    },
+                    {
+                        label: 'Gastos',
+                        data: chartGastos,
+                        borderWidth: 1
+                    },
+                    {
+                        label: 'Beneficio',
+                        data: chartBeneficio,
+                        type: 'line',
+                        tension: 0.25,
+                        borderWidth: 3,
+                        fill: false
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: {
+                    mode: 'index',
+                    intersect: false
+                },
+                plugins: {
+                    legend: {
+                        position: 'top'
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    }
+</script>
+{% endif %}
+{% endblock %}

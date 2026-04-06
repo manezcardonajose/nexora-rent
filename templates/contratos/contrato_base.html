@@ -1,0 +1,313 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+    .contrato-wrapper {
+        max-width: 980px;
+        margin: 0 auto 40px auto;
+    }
+
+    .contrato-card {
+        background: #fff;
+        border: 1px solid #d9dee7;
+        border-radius: 16px;
+        box-shadow: 0 10px 30px rgba(25, 45, 75, 0.08);
+        padding: 42px 48px;
+        color: #1e293b;
+        line-height: 1.75;
+        font-size: 15px;
+    }
+
+    .contrato-titulo {
+        text-align: center;
+        text-transform: uppercase;
+        font-weight: 800;
+        font-size: 28px;
+        letter-spacing: 0.5px;
+        margin-bottom: 12px;
+        color: #0f172a;
+    }
+
+    .contrato-subtitulo {
+        text-align: center;
+        color: #64748b;
+        margin-bottom: 32px;
+        font-size: 14px;
+    }
+
+    .contrato-fecha {
+        text-align: right;
+        margin-bottom: 30px;
+    }
+
+    .contrato-seccion-titulo {
+        font-size: 16px;
+        font-weight: 800;
+        margin-top: 28px;
+        margin-bottom: 16px;
+        text-transform: uppercase;
+        border-bottom: 2px solid #e2e8f0;
+        padding-bottom: 6px;
+        color: #0f172a;
+    }
+
+    .clausula {
+        margin-bottom: 18px;
+        text-align: justify;
+    }
+
+    .firma-zona {
+        margin-top: 70px;
+    }
+
+    .firma-caja {
+        text-align: center;
+        padding-top: 55px;
+    }
+
+    .firma-linea {
+        border-top: 1px solid #1f2937;
+        margin: 0 auto 10px auto;
+        width: 82%;
+    }
+
+    .firma-titulo {
+        font-weight: 700;
+        text-transform: uppercase;
+        margin-bottom: 8px;
+        color: #0f172a;
+    }
+
+    .datos-resumen {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 18px 20px;
+        margin: 20px 0 26px 0;
+    }
+
+    .galeria-fotos {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 16px;
+    }
+
+    .foto-card {
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        overflow: hidden;
+        background: #fff;
+    }
+
+        .foto-card img {
+            width: 100%;
+            height: 180px;
+            object-fit: cover;
+            display: block;
+        }
+
+    .foto-card-body {
+        padding: 10px 12px;
+        font-size: 13px;
+    }
+
+    @media print {
+        .navbar,
+        footer,
+        .btn {
+            display: none !important;
+        }
+
+        .contrato-card {
+            border: none !important;
+            box-shadow: none !important;
+            padding: 8px 18px !important;
+            border-radius: 0 !important;
+        }
+    }
+</style>
+
+<div class="container mt-4">
+    <div class="contrato-wrapper">
+        <div class="contrato-card">
+
+            <div class="contrato-titulo">Contrato de arrendamiento de vivienda</div>
+            <div class="contrato-subtitulo">Documento contractual generado desde el módulo de alquileres</div>
+
+            <div class="contrato-fecha">
+                En {{ propiedad.municipio or propiedad.ciudad or '________________' }},
+                a {{ contrato.fecha_inicio.strftime('%d/%m/%Y') if contrato.fecha_inicio else '____/____/________' }}
+            </div>
+
+            <div class="contrato-seccion-titulo">Reunidos</div>
+
+            <div class="clausula">
+                <strong>De una parte, la parte arrendadora:</strong><br>
+                {% for a in contrato.arrendadores() %}
+                {{ a.nombre }}{% if a.dni %}, con DNI/NIF {{ a.dni }}{% endif %}{% if a.direccion %}, con domicilio en {{ a.direccion }}{% endif %}{% if not loop.last %}; {% endif %}
+                {% endfor %}
+            </div>
+
+            {% if contrato.representantes() %}
+            <div class="clausula">
+                <strong>Representada en este acto por:</strong><br>
+                {% for r in contrato.representantes() %}
+                {{ r.nombre }}
+                {% if r.dni %}, con DNI {{ r.dni }}{% endif %}
+                {% if r.observaciones %}, en calidad de {{ r.observaciones }}{% endif %}
+                {% if r.firma_en_nombre_de %}, actuando en nombre y representación de {{ r.firma_en_nombre_de }}{% endif %}
+                {% if not loop.last %}<br>{% endif %}
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <div class="clausula">
+                <strong>Y de otra, la parte arrendataria:</strong><br>
+                {% for a in contrato.arrendatarios() %}
+                {{ a.nombre }}{% if a.dni %}, con DNI/NIE {{ a.dni }}{% endif %}{% if a.direccion %}, con domicilio en {{ a.direccion }}{% endif %}{% if a.telefono %}, teléfono {{ a.telefono }}{% endif %}{% if a.email %}, correo {{ a.email }}{% endif %}{% if not loop.last %}; {% endif %}
+                {% endfor %}
+            </div>
+
+            {% if contrato.avalistas() %}
+            <div class="clausula">
+                <strong>Y como avalista/s solidario/s:</strong><br>
+                {% for a in contrato.avalistas() %}
+                {{ a.nombre }}{% if a.dni %}, con DNI/NIE {{ a.dni }}{% endif %}{% if a.direccion %}, con domicilio en {{ a.direccion }}{% endif %}{% if a.telefono %}, teléfono {{ a.telefono }}{% endif %}{% if a.email %}, correo {{ a.email }}{% endif %}{% if not loop.last %}; {% endif %}
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <div class="clausula">
+                Las partes, reconociéndose mutuamente la capacidad legal necesaria para contratar y obligarse, formalizan el presente contrato con arreglo a las siguientes cláusulas.
+            </div>
+
+            <div class="contrato-seccion-titulo">Datos principales</div>
+
+            <div class="datos-resumen">
+                <div class="row">
+                    <div class="col-md-6"><strong>Vivienda:</strong> {{ propiedad.nombre or 'No indicada' }}</div>
+                    <div class="col-md-6"><strong>Dirección:</strong> {{ propiedad.direccion_completa() or 'No indicada' }}</div>
+                    <div class="col-md-6"><strong>Referencia catastral:</strong> {{ propiedad.referencia_catastral or 'No informada' }}</div>
+                    <div class="col-md-6"><strong>Tipo de inmueble:</strong> {{ propiedad.tipo_inmueble or 'No informado' }}</div>
+                    <div class="col-md-6"><strong>Fecha inicio:</strong> {{ contrato.fecha_inicio.strftime('%d/%m/%Y') if contrato.fecha_inicio else 'No indicada' }}</div>
+                    <div class="col-md-6"><strong>Fecha fin:</strong> {{ contrato.fecha_fin.strftime('%d/%m/%Y') if contrato.fecha_fin else 'No indicada' }}</div>
+                    <div class="col-md-6"><strong>Renta mensual:</strong> {{ "%.2f"|format(contrato.renta_mensual or 0) }} €</div>
+                    <div class="col-md-6"><strong>Fianza:</strong> {{ "%.2f"|format(contrato.fianza or 0) }} €</div>
+                    <div class="col-md-6"><strong>Meses adelantados:</strong> {{ contrato.meses_adelantados or 0 }}</div>
+                    <div class="col-md-6"><strong>Importe adelantado:</strong> {{ "%.2f"|format(contrato.importe_meses_adelantados or 0) }} €</div>
+                </div>
+            </div>
+
+            <div class="contrato-seccion-titulo">Forma de pago</div>
+            <div class="clausula">
+                <strong>IBAN:</strong> {{ propiedad.iban_cobro or 'NO INFORMADO' }}<br>
+                <strong>Entidad bancaria:</strong> {{ propiedad.entidad_bancaria or 'NO INFORMADA' }}<br>
+                <strong>Concepto de transferencia:</strong> {{ propiedad.concepto_transferencia or 'NO INFORMADO' }}
+            </div>
+
+            <div class="contrato-seccion-titulo">Devolución de fianza y cantidades adelantadas</div>
+
+            <div class="clausula">
+                <strong>Condiciones de devolución de la fianza:</strong><br>
+                {{ (contrato.devolucion_fianza_texto or 'No especificadas.') | replace('\n', '<br>') | safe }}
+            </div>
+
+            <div class="clausula">
+                <strong>Condiciones de devolución / compensación de cantidades adelantadas:</strong><br>
+                {{ (contrato.devolucion_adelantado_texto or 'No especificadas.') | replace('\n', '<br>') | safe }}
+            </div>
+
+            <div class="contrato-seccion-titulo">Cláusulas</div>
+
+            {% for c in clausulas_renderizadas %}
+            <div class="clausula">
+                <strong>{{ loop.index }}ª.- {{ c.titulo }}</strong><br>
+                {{ c.contenido | replace('\n', '<br>') | safe }}
+            </div>
+            {% endfor %}
+
+            {% if contrato.inventario_texto %}
+            <div class="contrato-seccion-titulo">Inventario principal</div>
+            <div class="clausula">
+                {{ contrato.inventario_texto | replace('\n', '<br>') | safe }}
+            </div>
+            {% endif %}
+
+            {% if anexos %}
+            <div class="contrato-seccion-titulo">Anexos de inventario</div>
+            {% for a in anexos %}
+            <div class="clausula">
+                <strong>{{ a.titulo }}</strong>
+                {% if a.habitacion %} ({{ a.habitacion.nombre }}){% endif %}<br>
+                {{ (a.contenido or '') | replace('\n', '<br>') | safe }}
+            </div>
+            {% endfor %}
+            {% endif %}
+
+            {% if fotos %}
+            <div class="contrato-seccion-titulo">Anexo fotográfico</div>
+            <div class="galeria-fotos">
+                {% for f in fotos %}
+                <div class="foto-card">
+                    <img src="{{ f.ruta }}" alt="{{ f.titulo or 'Foto contrato' }}">
+                    <div class="foto-card-body">
+                        <strong>{{ f.titulo or 'Foto' }}</strong>
+                        {% if f.habitacion %}
+                        <div class="text-muted">{{ f.habitacion.nombre }}</div>
+                        {% endif %}
+                        {% if f.descripcion %}
+                        <div>{{ f.descripcion }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            {% if contrato.observaciones %}
+            <div class="contrato-seccion-titulo">Observaciones particulares</div>
+            <div class="clausula">
+                {{ contrato.observaciones | replace('\n', '<br>') | safe }}
+            </div>
+            {% endif %}
+
+            <div class="row firma-zona">
+                <div class="col-md-4">
+                    <div class="firma-caja">
+                        <div class="firma-linea"></div>
+                        <div class="firma-titulo">La parte arrendadora</div>
+                        {% for a in contrato.arrendadores() %}
+                        <div>{{ a.nombre }}</div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="firma-caja">
+                        <div class="firma-linea"></div>
+                        <div class="firma-titulo">La parte arrendataria</div>
+                        {% for a in contrato.arrendatarios() %}
+                        <div>{{ a.nombre }}</div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="firma-caja">
+                        <div class="firma-linea"></div>
+                        <div class="firma-titulo">Avalista</div>
+                        {% if contrato.avalistas() %}
+                        {% for a in contrato.avalistas() %}
+                        <div>{{ a.nombre }}</div>
+                        {% endfor %}
+                        {% else %}
+                        <div>________________</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}

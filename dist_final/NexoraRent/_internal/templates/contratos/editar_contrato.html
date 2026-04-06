@@ -1,0 +1,595 @@
+{% extends "base.html" %}
+{% block title %}Editar contrato{% endblock %}
+
+{% block content %}
+<div class="container mt-4 mb-5">
+
+    <div class="d-flex gap-2 mb-3">
+        <a href="{{ url_for('contratos.documento_contrato', contrato_id=contrato.id) }}" class="btn btn-outline-primary">
+            Ver contrato actual
+        </a>
+        <a href="{{ url_for('alquileres.contratos') }}" class="btn btn-outline-secondary">
+            Volver
+        </a>
+    </div>
+
+    <h2 class="mb-4">Editar contrato #{{ contrato.id }}</h2>
+
+    <form method="post">
+
+        <div class="card shadow-sm mb-4">
+            <div class="card-header">
+                <strong>Datos generales</strong>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+
+                    <div class="col-md-6">
+                        <label class="form-label">Propiedad</label>
+                        <input type="text" class="form-control" value="{{ propiedad.nombre }}" readonly>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Inquilino principal</label>
+                        <input type="text" class="form-control" value="{{ inquilino.nombre }} {{ inquilino.apellidos }}" readonly>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label">Fecha inicio</label>
+                        <input type="date" name="fecha_inicio" class="form-control" value="{{ contrato.fecha_inicio }}">
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label">Fecha fin</label>
+                        <input type="date" name="fecha_fin" class="form-control" value="{{ contrato.fecha_fin }}">
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label">Renta mensual</label>
+                        <input type="number" step="0.01" name="renta_mensual" class="form-control" value="{{ contrato.renta_mensual or 0 }}">
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label">Fianza</label>
+                        <input type="number" step="0.01" name="fianza" class="form-control" value="{{ contrato.fianza or 0 }}">
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label">Meses adelantados</label>
+                        <input type="number" name="meses_adelantados" class="form-control" value="{{ contrato.meses_adelantados or 0 }}">
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label">Importe adelantado</label>
+                        <input type="number" step="0.01" name="importe_meses_adelantados" class="form-control" value="{{ contrato.importe_meses_adelantados or 0 }}">
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label">Estado</label>
+                        <select name="estado" class="form-select">
+                            <option value="activo" {% if contrato.estado == 'activo' %}selected{% endif %}>Activo</option>
+                            <option value="finalizado" {% if contrato.estado == 'finalizado' %}selected{% endif %}>Finalizado</option>
+                            <option value="cancelado" {% if contrato.estado == 'cancelado' %}selected{% endif %}>Cancelado</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-12">
+                        <label class="form-label">Observaciones particulares</label>
+                        <textarea name="observaciones" class="form-control" rows="3">{{ contrato.observaciones or '' }}</textarea>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Condiciones de devolución de la fianza</label>
+                        <textarea name="devolucion_fianza_texto" class="form-control" rows="5">{{ contrato.devolucion_fianza_texto or '' }}</textarea>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Condiciones de devolución / compensación de cantidades adelantadas</label>
+                        <textarea name="devolucion_adelantado_texto" class="form-control" rows="5">{{ contrato.devolucion_adelantado_texto or '' }}</textarea>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <div class="card shadow-sm mb-4">
+            <div class="card-header">
+                <strong>Inventario principal</strong>
+            </div>
+            <div class="card-body">
+                <label class="form-label">Texto de inventario general</label>
+                <textarea name="inventario_texto" class="form-control" rows="8">{{ contrato.inventario_texto or '' }}</textarea>
+            </div>
+        </div>
+
+        <div class="card shadow-sm mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <strong>Intervinientes</strong>
+                <span class="text-muted small">Puedes tener varios arrendadores, arrendatarios, avalistas o representantes</span>
+            </div>
+            <div class="card-body">
+                {% for i in intervinientes %}
+                <div class="border rounded p-3 mb-3">
+                    <div class="row g-3">
+
+                        <div class="col-md-2">
+                            <label class="form-label">Rol</label>
+                            <select name="interviniente_{{ i.id }}_rol" class="form-select">
+                                <option value="arrendador" {% if i.rol == 'arrendador' %}selected{% endif %}>Arrendador</option>
+                                <option value="arrendatario" {% if i.rol == 'arrendatario' %}selected{% endif %}>Arrendatario</option>
+                                <option value="avalista" {% if i.rol == 'avalista' %}selected{% endif %}>Avalista</option>
+                                <option value="representante" {% if i.rol == 'representante' %}selected{% endif %}>Representante</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label">Nombre</label>
+                            <input type="text" name="interviniente_{{ i.id }}_nombre" class="form-control" value="{{ i.nombre }}">
+                        </div>
+
+                        <div class="col-md-2">
+                            <label class="form-label">DNI</label>
+                            <input type="text" name="interviniente_{{ i.id }}_dni" class="form-control" value="{{ i.dni or '' }}">
+                        </div>
+
+                        <div class="col-md-2">
+                            <label class="form-label">Orden</label>
+                            <input type="number" name="interviniente_{{ i.id }}_orden" class="form-control" value="{{ i.orden or 0 }}">
+                        </div>
+
+                        <div class="col-md-2 d-flex align-items-end">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="interviniente_{{ i.id }}_activo" {% if i.activo %}checked{% endif %}>
+                                <label class="form-check-label">Activo</label>
+                            </div>
+                        </div>
+
+                        <div class="col-md-3">
+                            <label class="form-label">Teléfono</label>
+                            <input type="text" name="interviniente_{{ i.id }}_telefono" class="form-control" value="{{ i.telefono or '' }}">
+                        </div>
+
+                        <div class="col-md-3">
+                            <label class="form-label">Email</label>
+                            <input type="email" name="interviniente_{{ i.id }}_email" class="form-control" value="{{ i.email or '' }}">
+                        </div>
+
+                        <div class="col-md-3">
+                            <label class="form-label">Firma en nombre de</label>
+                            <input type="text" name="interviniente_{{ i.id }}_firma_en_nombre_de" class="form-control" value="{{ i.firma_en_nombre_de or '' }}">
+                        </div>
+
+                        <div class="col-md-3">
+                            <label class="form-label">Observaciones</label>
+                            <input type="text" name="interviniente_{{ i.id }}_observaciones" class="form-control" value="{{ i.observaciones or '' }}">
+                        </div>
+
+                        <div class="col-md-9">
+                            <label class="form-label">Dirección</label>
+                            <input type="text" name="interviniente_{{ i.id }}_direccion" class="form-control" value="{{ i.direccion or '' }}">
+                        </div>
+
+                        <div class="col-md-3 d-flex align-items-end">
+                            <button type="submit"
+                                    class="btn btn-outline-danger w-100"
+                                    formaction="{{ url_for('contratos.eliminar_interviniente_contrato', contrato_id=contrato.id, interviniente_id=i.id) }}"
+                                    formmethod="post"
+                                    onclick="return confirm('¿Eliminar interviniente?')">
+                                Eliminar interviniente
+                            </button>
+                        </div>
+
+                    </div>
+                </div>
+                {% endfor %}
+
+                <hr>
+                <h5>Añadir interviniente manual</h5>
+
+                <div class="row g-3">
+                    <div class="col-md-2">
+                        <label class="form-label">Rol</label>
+                        <select name="nuevo_interviniente_rol" class="form-select">
+                            <option value="arrendador">Arrendador</option>
+                            <option value="arrendatario">Arrendatario</option>
+                            <option value="avalista">Avalista</option>
+                            <option value="representante">Representante</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label">Nombre</label>
+                        <input type="text" name="nuevo_interviniente_nombre" class="form-control">
+                    </div>
+
+                    <div class="col-md-2">
+                        <label class="form-label">DNI</label>
+                        <input type="text" name="nuevo_interviniente_dni" class="form-control">
+                    </div>
+
+                    <div class="col-md-2">
+                        <label class="form-label">Teléfono</label>
+                        <input type="text" name="nuevo_interviniente_telefono" class="form-control">
+                    </div>
+
+                    <div class="col-md-2">
+                        <label class="form-label">Orden</label>
+                        <input type="number" name="nuevo_interviniente_orden" class="form-control" value="99">
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label">Email</label>
+                        <input type="email" name="nuevo_interviniente_email" class="form-control">
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label">Firma en nombre de</label>
+                        <input type="text" name="nuevo_interviniente_firma_en_nombre_de" class="form-control">
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label">Observaciones</label>
+                        <input type="text" name="nuevo_interviniente_observaciones" class="form-control">
+                    </div>
+
+                    <div class="col-md-12">
+                        <label class="form-label">Dirección</label>
+                        <input type="text" name="nuevo_interviniente_direccion" class="form-control">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card shadow-sm mb-4">
+            <div class="card-header">
+                <strong>Cláusulas</strong>
+            </div>
+            <div class="card-body">
+
+                {% for c in clausulas %}
+                <div class="border rounded p-3 mb-3">
+                    <div class="row g-3">
+
+                        <div class="col-md-6">
+                            <label class="form-label">Título</label>
+                            <input type="text" name="clausula_{{ c.id }}_titulo" class="form-control" value="{{ c.titulo }}">
+                        </div>
+
+                        <div class="col-md-2">
+                            <label class="form-label">Orden</label>
+                            <input type="number" name="clausula_{{ c.id }}_orden" class="form-control" value="{{ c.orden or 0 }}">
+                        </div>
+
+                        <div class="col-md-2 d-flex align-items-end">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="clausula_{{ c.id }}_activa" {% if c.activa %}checked{% endif %}>
+                                <label class="form-check-label">Activa</label>
+                            </div>
+                        </div>
+
+                        <div class="col-md-2 d-flex align-items-end gap-1">
+                            <button type="submit"
+                                    class="btn btn-outline-secondary btn-sm"
+                                    formaction="{{ url_for('contratos.subir_clausula_contrato', contrato_id=contrato.id, clausula_id=c.id) }}"
+                                    formmethod="post">↑</button>
+
+                            <button type="submit"
+                                    class="btn btn-outline-secondary btn-sm"
+                                    formaction="{{ url_for('contratos.bajar_clausula_contrato', contrato_id=contrato.id, clausula_id=c.id) }}"
+                                    formmethod="post">↓</button>
+
+                            <button type="submit"
+                                    class="btn btn-outline-danger btn-sm"
+                                    formaction="{{ url_for('contratos.eliminar_clausula_contrato', contrato_id=contrato.id, clausula_id=c.id) }}"
+                                    formmethod="post"
+                                    onclick="return confirm('¿Eliminar cláusula?')">X</button>
+                        </div>
+
+                        <div class="col-md-12">
+                            <label class="form-label">Contenido</label>
+                            <textarea name="clausula_{{ c.id }}_contenido" class="form-control" rows="5">{{ c.contenido }}</textarea>
+                        </div>
+
+                    </div>
+                </div>
+                {% endfor %}
+
+                <hr>
+                <h5>Nuevas cláusulas</h5>
+
+                <div id="contenedor-nuevas-clausulas">
+                    <div class="border rounded p-3 mb-3 nueva-clausula-item">
+                        <div class="row g-3">
+                            <div class="col-md-7">
+                                <label class="form-label">Título</label>
+                                <input type="text" name="nueva_clausula_titulo[]" class="form-control">
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">Orden</label>
+                                <input type="number" name="nueva_clausula_orden[]" class="form-control" value="99">
+                            </div>
+                            <div class="col-md-3 d-flex align-items-end">
+                                <button type="button" class="btn btn-outline-danger w-100" onclick="eliminarBloqueNuevaClausula(this)">
+                                    Quitar bloque
+                                </button>
+                            </div>
+                            <div class="col-md-12">
+                                <label class="form-label">Contenido</label>
+                                <textarea name="nueva_clausula_contenido[]" class="form-control" rows="5"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="button" class="btn btn-outline-primary" onclick="agregarNuevaClausula()">
+                    Añadir otra cláusula
+                </button>
+
+                <hr>
+                <h5>Insertar cláusula desde plantilla guardada</h5>
+                <div class="row g-3 mb-3">
+                    <div class="col-md-8">
+                        <label class="form-label">Plantilla existente</label>
+                        <select name="plantilla_existente_id" class="form-select">
+                            <option value="">-- No insertar ninguna --</option>
+                            {% for p in plantillas_existentes %}
+                            <option value="{{ p.id }}">{{ p.titulo }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-4 d-flex align-items-end">
+                        <div class="form-text">
+                            Al guardar, se añadirá al contrato como nueva cláusula editable.
+                        </div>
+                    </div>
+                </div>
+
+                <hr>
+                <h5>Guardar cláusula como plantilla reutilizable</h5>
+
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label">Código único</label>
+                        <input type="text" name="nueva_clausula_codigo_plantilla" class="form-control" placeholder="ej: mascotas_permitidas">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Título</label>
+                        <input type="text" name="nueva_clausula_titulo_plantilla" class="form-control">
+                    </div>
+                    <div class="col-md-4 d-flex align-items-end">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="guardar_clausula_como_plantilla">
+                            <label class="form-check-label">Guardar como plantilla</label>
+                        </div>
+                    </div>
+                    <div class="col-md-12">
+                        <label class="form-label">Contenido</label>
+                        <textarea name="nueva_clausula_contenido_plantilla" class="form-control" rows="4"></textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card shadow-sm mb-4">
+            <div class="card-header">
+                <strong>Fotos / anexo fotográfico</strong>
+            </div>
+            <div class="card-body">
+
+                {% if fotos %}
+                    {% for f in fotos %}
+                    <div class="border rounded p-3 mb-3">
+                        <div class="row g-2">
+                            <div class="col-md-4"><strong>{{ f.titulo or 'Foto' }}</strong></div>
+                            <div class="col-md-4 text-muted small">{{ f.ruta }}</div>
+                            <div class="col-md-4 text-muted small">
+                                {% if f.habitacion %}{{ f.habitacion.nombre }}{% else %}General{% endif %}
+                            </div>
+                            {% if f.descripcion %}
+                            <div class="col-md-12">{{ f.descripcion }}</div>
+                            {% endif %}
+                            <div class="col-md-12 mt-2">
+                                <button type="submit"
+                                        class="btn btn-outline-danger btn-sm"
+                                        formaction="{{ url_for('contratos.eliminar_foto_contrato', contrato_id=contrato.id, foto_id=f.id) }}"
+                                        formmethod="post"
+                                        onclick="return confirm('¿Eliminar foto?')">
+                                    Eliminar foto
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% endif %}
+
+                <h5>Añadir fotos</h5>
+                <div id="contenedor-fotos">
+                    <div class="border rounded p-3 mb-3 nueva-foto-item">
+                        <div class="row g-3">
+                            <div class="col-md-3">
+                                <label class="form-label">Título</label>
+                                <input type="text" name="nueva_foto_titulo[]" class="form-control">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Habitación / estancia</label>
+                                <select name="nueva_foto_habitacion_id[]" class="form-select">
+                                    <option value="">General</option>
+                                    {% for h in habitaciones %}
+                                    <option value="{{ h.id }}">{{ h.nombre }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Ruta / URL imagen</label>
+                                <input type="text" name="nueva_foto_ruta[]" class="form-control" placeholder="/static/uploads/foto1.jpg">
+                            </div>
+                            <div class="col-md-1">
+                                <label class="form-label">Orden</label>
+                                <input type="number" name="nueva_foto_orden[]" class="form-control" value="99">
+                            </div>
+                            <div class="col-md-2 d-flex align-items-end">
+                                <button type="button" class="btn btn-outline-danger w-100" onclick="eliminarBloqueFoto(this)">Quitar</button>
+                            </div>
+                            <div class="col-md-12">
+                                <label class="form-label">Descripción</label>
+                                <textarea name="nueva_foto_descripcion[]" class="form-control" rows="2"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="button" class="btn btn-outline-primary" onclick="agregarFoto()">
+                    Añadir otra foto
+                </button>
+            </div>
+        </div>
+
+        <div class="card shadow-sm mb-4">
+            <div class="card-header">
+                <strong>Anexos de inventario por estancia</strong>
+            </div>
+            <div class="card-body">
+
+                {% if anexos %}
+                    {% for a in anexos %}
+                    <div class="border rounded p-3 mb-3">
+                        <div><strong>{{ a.titulo }}</strong></div>
+                        <div class="small text-muted">
+                            Orden {{ a.orden }}
+                            {% if a.habitacion %} · {{ a.habitacion.nombre }}{% else %} · General{% endif %}
+                        </div>
+                        {% if a.contenido %}
+                        <div class="mt-2">{{ a.contenido }}</div>
+                        {% endif %}
+                        <div class="mt-3">
+                            <button type="submit"
+                                    class="btn btn-outline-danger btn-sm"
+                                    formaction="{{ url_for('contratos.eliminar_anexo_contrato', contrato_id=contrato.id, anexo_id=a.id) }}"
+                                    formmethod="post"
+                                    onclick="return confirm('¿Eliminar anexo?')">
+                                Eliminar anexo
+                            </button>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% endif %}
+
+                <h5>Añadir anexo de inventario</h5>
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label">Título</label>
+                        <input type="text" name="nuevo_anexo_titulo" class="form-control" placeholder="Anexo I - Dormitorio principal">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">Orden</label>
+                        <input type="number" name="nuevo_anexo_orden" class="form-control" value="99">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Habitación / estancia</label>
+                        <select name="nuevo_anexo_habitacion_id" class="form-select">
+                            <option value="">General</option>
+                            {% for h in habitaciones %}
+                            <option value="{{ h.id }}">{{ h.nombre }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-12">
+                        <label class="form-label">Contenido</label>
+                        <textarea name="nuevo_anexo_contenido" class="form-control" rows="5"></textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="d-flex gap-2">
+            <button type="submit" name="accion" value="guardar" class="btn btn-primary">
+                Guardar contrato
+            </button>
+
+            <button type="submit" name="accion" value="vista_previa" class="btn btn-outline-success">
+                Guardar y vista previa
+            </button>
+        </div>
+
+    </form>
+</div>
+
+<script>
+function agregarNuevaClausula() {
+    const contenedor = document.getElementById('contenedor-nuevas-clausulas');
+    const bloque = document.createElement('div');
+    bloque.className = 'border rounded p-3 mb-3 nueva-clausula-item';
+    bloque.innerHTML = `
+        <div class="row g-3">
+            <div class="col-md-7">
+                <label class="form-label">Título</label>
+                <input type="text" name="nueva_clausula_titulo[]" class="form-control">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Orden</label>
+                <input type="number" name="nueva_clausula_orden[]" class="form-control" value="99">
+            </div>
+            <div class="col-md-3 d-flex align-items-end">
+                <button type="button" class="btn btn-outline-danger w-100" onclick="eliminarBloqueNuevaClausula(this)">
+                    Quitar bloque
+                </button>
+            </div>
+            <div class="col-md-12">
+                <label class="form-label">Contenido</label>
+                <textarea name="nueva_clausula_contenido[]" class="form-control" rows="5"></textarea>
+            </div>
+        </div>
+    `;
+    contenedor.appendChild(bloque);
+}
+
+function eliminarBloqueNuevaClausula(btn) {
+    const bloque = btn.closest('.nueva-clausula-item');
+    if (bloque) bloque.remove();
+}
+
+function agregarFoto() {
+    const contenedor = document.getElementById('contenedor-fotos');
+    const bloque = document.createElement('div');
+    bloque.className = 'border rounded p-3 mb-3 nueva-foto-item';
+    bloque.innerHTML = `
+        <div class="row g-3">
+            <div class="col-md-3">
+                <label class="form-label">Título</label>
+                <input type="text" name="nueva_foto_titulo[]" class="form-control">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Habitación / estancia</label>
+                <select name="nueva_foto_habitacion_id[]" class="form-select">
+                    <option value="">General</option>
+                    {% for h in habitaciones %}
+                    <option value="{{ h.id }}">{{ h.nombre }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Ruta / URL imagen</label>
+                <input type="text" name="nueva_foto_ruta[]" class="form-control" placeholder="/static/uploads/foto1.jpg">
+            </div>
+            <div class="col-md-1">
+                <label class="form-label">Orden</label>
+                <input type="number" name="nueva_foto_orden[]" class="form-control" value="99">
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <button type="button" class="btn btn-outline-danger w-100" onclick="eliminarBloqueFoto(this)">Quitar</button>
+            </div>
+            <div class="col-md-12">
+                <label class="form-label">Descripción</label>
+                <textarea name="nueva_foto_descripcion[]" class="form-control" rows="2"></textarea>
+            </div>
+        </div>
+    `;
+    contenedor.appendChild(bloque);
+}
+
+function eliminarBloqueFoto(btn) {
+    const bloque = btn.closest('.nueva-foto-item');
+    if (bloque) bloque.remove();
+}
+</script>
+{% endblock %}

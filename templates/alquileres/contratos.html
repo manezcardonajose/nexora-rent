@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% block title %}Inquilinos{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="mb-1"><i class="bi bi-people"></i> Inquilinos</h2>
+        <p class="text-muted mb-0">Gestión de inquilinos</p>
+    </div>
+    <a href="{{ url_for('alquileres.nuevo_inquilino') }}" class="btn btn-primary">
+        <i class="bi bi-plus-circle"></i> Nuevo inquilino
+    </a>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-header bg-primary text-white">
+        <strong>Listado</strong>
+    </div>
+    <div class="card-body">
+        {% if inquilinos %}
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th style="min-width: 340px;">Inquilino</th>
+                        <th>Contacto</th>
+                        <th>DNI</th>
+                        <th class="text-center" style="width: 120px;">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for inquilino in inquilinos %}
+                    <tr>
+                        <td>
+                            <div class="fw-semibold">
+                                {{ inquilino.nombre }} {{ inquilino.apellidos or '' }}
+                            </div>
+                            <div class="small text-muted">
+                                ID #{{ inquilino.id }}
+                            </div>
+                        </td>
+
+                        <td>
+                            <div>{{ inquilino.telefono or '-' }}</div>
+                            <div class="small text-muted">{{ inquilino.email or '-' }}</div>
+                        </td>
+
+                        <td>
+                            <span class="small">{{ inquilino.dni or '-' }}</span>
+                        </td>
+
+                        <td class="text-center">
+                            <div class="dropdown">
+                                <button class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
+                                    Acciones
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end shadow">
+                                    <li>
+                                        <a class="dropdown-item" href="{{ url_for('alquileres.ver_inquilino', id=inquilino.id) }}">
+                                            <i class="bi bi-eye"></i> Ver
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" href="{{ url_for('alquileres.editar_inquilino', id=inquilino.id) }}">
+                                            <i class="bi bi-pencil"></i> Editar
+                                        </a>
+                                    </li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li>
+                                        <form method="POST" action="{{ url_for('alquileres.eliminar_inquilino', id=inquilino.id) }}" onsubmit="return confirm('¿Eliminar este inquilino?')">
+                                            <button type="submit" class="dropdown-item text-danger">
+                                                <i class="bi bi-trash"></i> Eliminar
+                                            </button>
+                                        </form>
+                                        <a href="{{ url_for('contratos.documento_contrato', contrato_id=contrato.id) }}"
+                                           class="btn btn-outline-primary btn-sm">
+                                            Ver contrato
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="alert alert-info mb-0">No hay inquilinos registrados.</div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

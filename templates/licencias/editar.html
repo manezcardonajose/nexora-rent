@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4"> 
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h3>✏️ Editar licencia</h3>
+        <a href="{{ url_for('licencias.index') }}" class="btn btn-secondary">Volver</a>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <form method="POST">
+
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Usuario</label>
+                        <input type="text" class="form-control" value="{{ usuario.username }}" disabled>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Email</label>
+                        <input type="text" class="form-control" value="{{ usuario.email }}" disabled>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label">Plan</label>
+                        <select name="plan" class="form-select">
+                            {% for plan_value, plan_text in plan_options %}
+                            <option value="{{ plan_value }}" {% if usuario.plan_normalizado() == plan_value %}selected{% endif %}>{{ plan_text }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label">Rol</label>
+                        <select name="rol" class="form-select">
+                            <option value="demo" {% if usuario.rol == 'demo' %}selected{% endif %}>Demo</option>
+                            <option value="cliente" {% if usuario.rol == 'cliente' %}selected{% endif %}>Cliente</option>
+                            <option value="admin" {% if usuario.rol == 'admin' %}selected{% endif %}>Admin</option>
+                            <option value="empleado" {% if usuario.rol == 'empleado' %}selected{% endif %}>Empleado</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label">Máx. propiedades</label>
+                        <input type="number" name="max_propiedades" class="form-control" value="{{ usuario.max_propiedades or 0 }}">
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label">Máx. reservas</label>
+                        <input type="number" name="max_reservas" class="form-control" value="{{ usuario.max_reservas or 0 }}">
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label">Licencia expira</label>
+                        <input type="date" name="licencia_expiracion" class="form-control"
+                               value="{{ usuario.licencia_expiracion.strftime('%Y-%m-%d') if usuario.licencia_expiracion else '' }}">
+                        <div class="form-text">Déjalo vacío para planes vitalicios o si quieres asignar fecha después.</div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label">Cuenta activa</label>
+                        <select name="activo" class="form-select">
+                            <option value="1" {% if usuario.activo %}selected{% endif %}>Sí</option>
+                            <option value="0" {% if not usuario.activo %}selected{% endif %}>No</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label">Administrador</label>
+                        <select name="puede_admin" class="form-select">
+                            <option value="1" {% if usuario.puede_admin %}selected{% endif %}>Sí</option>
+                            <option value="0" {% if not usuario.puede_admin %}selected{% endif %}>No</option>
+                        </select>
+                    </div>
+                </div>
+
+                <hr>
+
+                <div class="alert alert-light border">
+                    <strong>Modelo recomendado:</strong>
+                    Demo = limitada · Trial = completa temporal · Activa = completa renovable · Vitalicia = completa sin caducidad.
+                </div>
+
+                <div class="d-flex justify-content-end">
+                    <button type="submit" class="btn btn-primary">Guardar licencia</button>
+                </div>
+
+            </form>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Registro de Viajeros - Reserva #{{ reserva.id }}</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            margin: 2cm;
+            color: #333;
+        }
+        h1 { 
+            color: #2c3e50; 
+            border-bottom: 3px solid #dc3545; 
+            padding-bottom: 10px;
+            text-align: center;
+        }
+        h2 {
+            color: #2c3e50;
+            border-bottom: 1px solid #bdc3c7;
+            padding-bottom: 5px;
+            margin-top: 25px;
+        }
+        table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            margin: 15px 0; 
+        }
+        th { 
+            background: #34495e; 
+            color: white; 
+            text-align: left; 
+            padding: 8px; 
+        }
+        td { 
+            padding: 8px; 
+            border-bottom: 1px solid #ddd; 
+        }
+        .footer { 
+            margin-top: 40px; 
+            font-size: 0.9em; 
+            color: #7f8c8d; 
+            text-align: center; 
+            border-top: 1px solid #ecf0f1;
+            padding-top: 15px;
+        }
+        .firma {
+            margin-top: 50px;
+            display: flex;
+            justify-content: space-between;
+        }
+        .firma-linea {
+            width: 200px;
+            border-top: 1px solid #333;
+            margin-top: 40px;
+            text-align: center;
+        }
+        .aviso-legal {
+            background: #f8f9fa;
+            border-left: 4px solid #dc3545;
+            padding: 10px;
+            margin: 20px 0;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <h1>📋 REGISTRO DE VIAJEROS</h1>
+    <p style="text-align: right;">Reserva #{{ reserva.id }} · {{ reserva.fecha_creacion.strftime('%d/%m/%Y %H:%M') }}</p>
+    
+    <div class="aviso-legal">
+        <strong>⚠️ IMPORTANTE:</strong> Este documento debe conservarse durante 3 años según el Real Decreto 933/2021. 
+        Los datos serán comunicados a las autoridades en el plazo de 24h.
+    </div>
+
+    <!-- DATOS DEL ESTABLECIMIENTO -->
+    <h2>🏠 DATOS DEL ALOJAMIENTO</h2>
+    <table>
+        <tr><th width="30%">Nombre:</th><td>{{ reserva.propiedad.nombre }}</td></tr>
+        <tr><th>Dirección:</th><td>{{ reserva.propiedad.direccion or 'No especificada' }}</td></tr>
+        <tr><th>Municipio:</th><td>{{ reserva.propiedad.ciudad or 'No especificado' }}</td></tr>
+        <tr><th>Provincia:</th><td>{{ reserva.propiedad.pais or 'España' }}</td></tr>
+        <tr><th>Nº Habitación:</th><td>
+            {% for rh in reserva.habitaciones_asignadas %}
+                {{ rh.habitacion.nombre }}{% if not loop.last %}, {% endif %}
+            {% endfor %}
+        </td></tr>
+    </table>
+
+    <!-- DATOS DE LA ESTANCIA -->
+    <h2>📅 DATOS DE LA ESTANCIA</h2>
+    <table>
+        <tr><th>Fecha entrada:</th><td>{{ reserva.fecha_entrada.strftime('%d/%m/%Y') }}</td></tr>
+        <tr><th>Fecha salida:</th><td>{{ reserva.fecha_salida.strftime('%d/%m/%Y') }}</td></tr>
+        <tr><th>Nº total viajeros:</th><td>{{ reserva.num_huespedes }} ({{ reserva.num_menores }} menores)</td></tr>
+    </table>
+
+    <!-- LISTADO DE HUÉSPEDES (obligatorio por ley) -->
+    <h2>👥 LISTADO DE VIAJEROS</h2>
+    {% if reserva.huespedes.count() > 0 %}
+        <table>
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Nombre completo</th>
+                    <th>Sexo</th>
+                    <th>F. Nacimiento</th>
+                    <th>Nacionalidad</th>
+                    <th>Doc. identidad</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for h in reserva.huespedes %}
+                <tr>
+                    <td>{% if loop.first %}TITULAR{% else %}{{ loop.index }}{% endif %}</td>
+                    <td>{{ h.nombre }} {{ h.apellidos }}</td>
+                    <td>{{ h.sexo }}</td>
+                    <td>{{ h.fecha_nacimiento.strftime('%d/%m/%Y') }}</td>
+                    <td>{{ h.nacionalidad }}</td>
+                    <td>{{ h.tipo_documento }} {{ h.numero_documento }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p style="color: red;">⚠️ No hay huéspedes registrados para esta reserva.</p>
+    {% endif %}
+
+    <!-- DOMICILIOS (opcional pero recomendado) -->
+    <h2>🏡 DOMICILIOS HABITUALES</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Huésped</th>
+                <th>Dirección</th>
+                <th>Ciudad</th>
+                <th>CP</th>
+                <th>País</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for h in reserva.huespedes %}
+            <tr>
+                <td>{{ h.nombre }} {{ h.apellidos }}</td>
+                <td>{{ h.domicilio or 'Mismo que titular' }}</td>
+                <td>{{ h.ciudad or '-' }}</td>
+                <td>{{ h.codigo_postal or '-' }}</td>
+                <td>{{ h.pais or '-' }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- CONTACTO -->
+    <h2>📞 CONTACTO</h2>
+    <table>
+        <tr><th>Teléfono:</th><td>{{ reserva.huespedes.first().telefono if reserva.huespedes.first() else 'No especificado' }}</td></tr>
+        <tr><th>Email:</th><td>{{ reserva.huespedes.first().email if reserva.huespedes.first() else 'No especificado' }}</td></tr>
+    </table>
+
+    <!-- FIRMAS (obligatorio en papel) -->
+    <div class="firma">
+        <div>
+            <p><strong>Firma del viajero:</strong></p>
+            <div class="firma-linea"></div>
+            <p style="margin-top: 5px;">{{ reserva.huespedes.first().nombre if reserva.huespedes.first() else '' }}</p>
+        </div>
+        <div>
+            <p><strong>Firma del establecimiento:</strong></p>
+            <div class="firma-linea"></div>
+            <p style="margin-top: 5px;">{{ current_user.nombre or current_user.username }}</p>
+        </div>
+    </div>
+
+    <div class="footer">
+        <p>Documento generado el {{ now().strftime('%d/%m/%Y %H:%M') }}</p>
+        <p>Cumple con el Real Decreto 933/2021 y la Orden INT/321/2021</p>
+    </div>
+</body>
+</html>

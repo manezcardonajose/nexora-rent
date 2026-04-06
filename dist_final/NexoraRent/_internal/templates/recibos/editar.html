@@ -1,0 +1,207 @@
+{% extends "base.html" %}
+{% block title %}Editar recibo{% endblock %}
+
+{% block content %}
+<div class="card shadow-sm">
+    <div class="card-header bg-warning">
+        <h5 class="mb-0"><i class="bi bi-pencil"></i> Editar recibo</h5>
+    </div>
+    <div class="card-body">
+        <form method="POST">
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">Propiedad</label>
+                    <select name="propiedad_id" id="propiedad_id" class="form-select" required>
+                        {% for propiedad in propiedades %}
+                        <option value="{{ propiedad.id }}" {% if recibo.propiedad_id == propiedad.id %}selected{% endif %}>
+                            {{ propiedad.nombre }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">Contrato</label>
+                    <select name="contrato_id" id="contrato_id" class="form-select">
+                        <option value="">Sin contrato</option>
+                        {% for contrato in contratos %}
+                        <option value="{{ contrato.id }}" {% if recibo.contrato_id == contrato.id %}selected{% endif %}>
+                            #{{ contrato.id }} - {{ contrato.propiedad.nombre if contrato.propiedad else '-' }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">Inquilino</label>
+                    <select name="inquilino_id" id="inquilino_id" class="form-select">
+                        <option value="">Sin inquilino</option>
+                        {% for inquilino in inquilinos %}
+                        <option value="{{ inquilino.id }}" {% if recibo.inquilino_id == inquilino.id %}selected{% endif %}>
+                            {{ inquilino.nombre }} {{ inquilino.apellidos }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-md-3 mb-3">
+                    <label class="form-label">Fecha emisión</label>
+                    <input type="date" name="fecha_emision" class="form-control" value="{{ recibo.fecha_emision }}">
+                </div>
+
+                <div class="col-md-3 mb-3">
+                    <label class="form-label">Fecha vencimiento</label>
+                    <input type="date" name="fecha_vencimiento" class="form-control" value="{{ recibo.fecha_vencimiento or '' }}">
+                </div>
+
+                <div class="col-md-3 mb-3">
+                    <label class="form-label">Tipo</label>
+                    <select name="tipo" class="form-select">
+                        {% for tipo in tipos_recibo %}
+                        <option value="{{ tipo }}" {% if recibo.tipo == tipo %}selected{% endif %}>{{ tipo }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-md-3 mb-3">
+                    <label class="form-label">Situación del recibo</label>
+                    <select name="estado" class="form-select">
+                        {% for estado in estados %}
+                        <option value="{{ estado }}" {% if recibo.estado == estado %}selected{% endif %}>{{ estado }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-md-3 mb-3">
+                    <label class="form-label">Impuestos</label>
+                    <input type="number" step="0.01" name="impuestos" class="form-control" value="{{ recibo.impuestos }}">
+                </div>
+
+                <div class="col-md-3 mb-3">
+                    <label class="form-label">Método de abono</label>
+                    <select name="metodo_pago" class="form-select">
+                        <option value="">Selecciona</option>
+                        {% for metodo in metodos_abono %}
+                        <option value="{{ metodo }}" {% if recibo.metodo_pago == metodo %}selected{% endif %}>{{ metodo }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-md-3 mb-3">
+                    <label class="form-label">Fecha pago</label>
+                    <input type="date" name="fecha_pago" class="form-control" value="{{ recibo.fecha_pago or '' }}">
+                </div>
+            </div>
+
+            <div class="card border mt-3">
+                <div class="card-header bg-light">
+                    <strong>Líneas del recibo</strong>
+                </div>
+                <div class="card-body">
+                    <div class="row fw-bold text-muted mb-2">
+                        <div class="col-md-2">Tipo</div>
+                        <div class="col-md-4">Concepto</div>
+                        <div class="col-md-2">Cantidad</div>
+                        <div class="col-md-2">Precio</div>
+                        <div class="col-md-2">Observaciones</div>
+                    </div>
+
+                    {% for linea in recibo.lineas %}
+                    <div class="row mb-2">
+                        <div class="col-md-2">
+                            <select name="linea_tipo[]" class="form-select">
+                                <option value="alquiler" {% if linea.tipo == 'alquiler' %}selected{% endif %}>alquiler</option>
+                                <option value="suministro" {% if linea.tipo == 'suministro' %}selected{% endif %}>suministro</option>
+                                <option value="servicio" {% if linea.tipo == 'servicio' %}selected{% endif %}>servicio</option>
+                                <option value="ajuste" {% if linea.tipo == 'ajuste' %}selected{% endif %}>ajuste</option>
+                                <option value="otro" {% if linea.tipo == 'otro' %}selected{% endif %}>otro</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <input type="text" name="linea_concepto[]" class="form-control" value="{{ linea.concepto }}">
+                        </div>
+                        <div class="col-md-2">
+                            <input type="number" step="0.01" name="linea_cantidad[]" class="form-control" value="{{ linea.cantidad }}">
+                        </div>
+                        <div class="col-md-2">
+                            <input type="number" step="0.001" name="linea_precio[]" class="form-control" value="{{ linea.precio_unitario }}">
+                        </div>
+                        <div class="col-md-2">
+                            <input type="text" name="linea_observaciones[]" class="form-control" value="{{ linea.observaciones or '' }}">
+                        </div>
+                    </div>
+                    {% endfor %}
+
+                    {% for _ in range(3) %}
+                    <div class="row mb-2">
+                        <div class="col-md-2">
+                            <select name="linea_tipo[]" class="form-select">
+                                <option value="alquiler">alquiler</option>
+                                <option value="suministro">suministro</option>
+                                <option value="servicio">servicio</option>
+                                <option value="ajuste">ajuste</option>
+                                <option value="otro">otro</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <input type="text" name="linea_concepto[]" class="form-control" placeholder="Concepto">
+                        </div>
+                        <div class="col-md-2">
+                            <input type="number" step="0.01" name="linea_cantidad[]" class="form-control" value="1">
+                        </div>
+                        <div class="col-md-2">
+                            <input type="number" step="0.01" name="linea_precio[]" class="form-control" value="0">
+                        </div>
+                        <div class="col-md-2">
+                            <input type="text" name="linea_observaciones[]" class="form-control" placeholder="Obs.">
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="row mt-3">
+                <div class="col-md-12 mb-3">
+                    <label class="form-label">Instrucciones de pago</label>
+                    <textarea name="instrucciones_pago" class="form-control" rows="2">{{ recibo.instrucciones_pago or '' }}</textarea>
+                </div>
+
+                <div class="col-md-12 mb-3">
+                    <label class="form-label">Observaciones</label>
+                    <textarea name="observaciones" class="form-control" rows="2">{{ recibo.observaciones or '' }}</textarea>
+                </div>
+
+                <div class="col-md-12 mb-3">
+                    <label class="form-label">Leyenda legal</label>
+                    <textarea name="leyenda_legal" class="form-control" rows="2">{{ recibo.leyenda_legal }}</textarea>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-between mt-3">
+                <a href="{{ url_for('recibos.ver', id=recibo.id) }}" class="btn btn-secondary">Volver</a>
+                <button type="submit" class="btn btn-success">Guardar cambios</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    document.getElementById('contrato_id').addEventListener('change', async function () {
+        const contratoId = this.value;
+        if (!contratoId) return;
+
+        const response = await fetch(`/recibos/contrato/${contratoId}/datos`);
+        if (!response.ok) return;
+
+        const data = await response.json();
+
+        if (data.propiedad_id) {
+            document.getElementById('propiedad_id').value = data.propiedad_id;
+        }
+
+        if (data.inquilino_id) {
+            document.getElementById('inquilino_id').value = data.inquilino_id;
+        }
+    });
+</script>
+{% endblock %}

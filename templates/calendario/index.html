@@ -1,54 +1,493 @@
 {% extends "base.html" %}
 
 {% block extra_css %}
-<link href='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css' rel='stylesheet' />
+<link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css" rel="stylesheet" />
 <style>
+    .calendar-page {
+        display: flex;
+        flex-direction: column;
+        gap: 1.25rem;
+    }
+
+    .calendar-topbar {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+    }
+
+    .calendar-title h1 {
+        margin: 0;
+        font-size: 1.8rem;
+        font-weight: 700;
+    }
+
+    .calendar-title p {
+        margin: 0.35rem 0 0 0;
+        color: #6c757d;
+    }
+
+    .calendar-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+    }
+
+        .calendar-actions .btn {
+            border-radius: 0.8rem;
+            font-weight: 600;
+        }
+
+    .calendar-panel {
+        background: #ffffff;
+        border: 1px solid #e9ecef;
+        border-radius: 1rem;
+        box-shadow: 0 0.35rem 1.2rem rgba(0, 0, 0, 0.05);
+    }
+
+    .calendar-toolbar {
+        padding: 1rem 1rem 0 1rem;
+    }
+
+    .calendar-filters {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+        gap: 0.75rem;
+        align-items: end;
+    }
+
+        .calendar-filters .form-label {
+            font-weight: 600;
+            margin-bottom: 0.35rem;
+        }
+
+    .legend-boxes {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.6rem;
+        margin-top: 1rem;
+    }
+
+    .legend-item {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.45rem 0.75rem;
+        border-radius: 999px;
+        background: #f8f9fa;
+        border: 1px solid #e9ecef;
+        font-size: 0.92rem;
+    }
+
+    .legend-color {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        display: inline-block;
+    }
+
+    .calendar-wrapper {
+        padding: 1rem;
+    }
+
     #calendar {
-        max-width: 1100px;
-        margin: 0 auto;
+        min-height: 720px;
+    }
+
+    .fc {
+        --fc-border-color: #e9ecef;
+        --fc-button-bg-color: #0d6efd;
+        --fc-button-border-color: #0d6efd;
+        --fc-button-hover-bg-color: #0b5ed7;
+        --fc-button-hover-border-color: #0a58ca;
+        --fc-button-active-bg-color: #0a58ca;
+        --fc-button-active-border-color: #0a53be;
+        --fc-today-bg-color: rgba(13, 110, 253, 0.08);
+    }
+
+        .fc .fc-toolbar-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+        }
+
+        .fc .fc-button {
+            border-radius: 0.65rem;
+            text-transform: capitalize;
+            font-weight: 600;
+            box-shadow: none !important;
+        }
+
+    .fc-event {
+        border-radius: 0.6rem;
+        padding: 2px 4px;
+        cursor: pointer;
+    }
+
+    .fc-event-title {
+        font-weight: 600;
+    }
+
+    .event-popover {
+        position: absolute;
+        z-index: 9999;
+        max-width: 320px;
+        min-width: 240px;
+        background: #fff;
+        border: 1px solid #dee2e6;
+        border-radius: 0.9rem;
+        box-shadow: 0 0.75rem 2rem rgba(0, 0, 0, 0.15);
+        padding: 0.9rem 1rem;
+        pointer-events: none;
+        display: none;
+    }
+
+        .event-popover h6 {
+            margin: 0 0 0.45rem 0;
+            font-weight: 700;
+            font-size: 1rem;
+        }
+
+        .event-popover .mini {
+            margin: 0.18rem 0;
+            font-size: 0.92rem;
+            color: #495057;
+        }
+
+        .event-popover .badge {
+            border-radius: 999px;
+            font-size: 0.78rem;
+        }
+
+    .calendar-help {
+        padding: 0 1rem 1rem 1rem;
+    }
+
+        .calendar-help .alert {
+            margin: 0;
+            border-radius: 0.9rem;
+        }
+
+    @media (max-width: 768px) {
+        .calendar-topbar {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .calendar-actions {
+            width: 100%;
+        }
+
+            .calendar-actions .btn {
+                flex: 1 1 auto;
+            }
+
+        #calendar {
+            min-height: 620px;
+        }
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<h1 class="mb-4">Calendario de reservas</h1>
-<div id='calendar'></div>
+<div class="container-fluid py-3">
+    <div class="calendar-page">
+        <div class="calendar-topbar">
+            <div class="calendar-title">
+                <h1>Calendario operativo</h1>
+                <p>Reservas, bloqueos y tareas en una sola vista.</p>
+            </div>
+
+            <div class="calendar-actions">
+                <a href="{{ url_for('reservas.nueva') }}" class="btn btn-primary">
+                    <i class="bi bi-plus-circle me-1"></i> Nueva reserva
+                </a>
+                <a href="{{ url_for('tareas.nueva') }}" class="btn btn-outline-primary">
+                    <i class="bi bi-list-check me-1"></i> Nueva tarea
+                </a>
+            </div>
+        </div>
+
+        <div class="calendar-panel">
+            <div class="calendar-toolbar">
+                <div class="calendar-filters">
+                    <div>
+                        <label for="filtroTexto" class="form-label">Buscar</label>
+                        <input type="text" id="filtroTexto" class="form-control" placeholder="Huésped, propiedad, motivo, tarea...">
+                    </div>
+
+                    <div>
+                        <label for="filtroTipo" class="form-label">Tipo de evento</label>
+                        <select id="filtroTipo" class="form-select">
+                            <option value="todos">Todos</option>
+                            <option value="reserva">Reservas</option>
+                            <option value="bloqueo">Bloqueos propiedad</option>
+                            <option value="bloqueo_habitacion">Bloqueos habitación</option>
+                            <option value="tarea">Tareas</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label for="filtroEstado" class="form-label">Estado</label>
+                        <select id="filtroEstado" class="form-select">
+                            <option value="todos">Todos</option>
+                            <option value="confirmada">Confirmadas</option>
+                            <option value="pendiente">Pendientes</option>
+                            <option value="cancelada">Canceladas</option>
+                            <option value="completada">Tareas completadas</option>
+                            <option value="pendiente_tarea">Tareas pendientes</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="legend-boxes">
+                    <span class="legend-item"><span class="legend-color" style="background:#28a745;"></span> Reserva confirmada</span>
+                    <span class="legend-item"><span class="legend-color" style="background:#ffc107;"></span> Reserva pendiente / bloqueo habitación</span>
+                    <span class="legend-item"><span class="legend-color" style="background:#dc3545;"></span> Bloqueo propiedad</span>
+                    <span class="legend-item"><span class="legend-color" style="background:#0d6efd;"></span> Tarea pendiente</span>
+                    <span class="legend-item"><span class="legend-color" style="background:#6c757d;"></span> Cancelada / completada</span>
+                </div>
+            </div>
+
+            <div class="calendar-wrapper">
+                <div id="calendar"></div>
+            </div>
+
+            <div class="calendar-help">
+                <div class="alert alert-light border">
+                    <strong>Uso rápido:</strong> pulsa en un evento para abrir su ficha. Usa los filtros para centrarte en reservas, bloqueos o tareas.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="eventPopover" class="event-popover"></div>
 {% endblock %}
 
 {% block extra_js %}
-<script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js'></script>
-<script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/locales/es.min.js'></script>
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        var calendarEl = document.getElementById('calendar');
+document.addEventListener('DOMContentLoaded', function () {
+    const calendarEl = document.getElementById('calendar');
+    const filtroTexto = document.getElementById('filtroTexto');
+    const filtroTipo = document.getElementById('filtroTipo');
+    const filtroEstado = document.getElementById('filtroEstado');
+    const popover = document.getElementById('eventPopover');
 
-        if (!calendarEl) {
-            console.error('❌ No se encontró el elemento #calendar');
-            return;
+    if (!calendarEl) {
+        console.error('No se encontró #calendar');
+        return;
+    }
+
+    let allEvents = [];
+
+    function normalizarTexto(valor) {
+        return (valor || '').toString().toLowerCase().trim();
+    }
+
+    function formatoFecha(fechaStr) {
+        if (!fechaStr) return '-';
+        const fecha = new Date(fechaStr);
+        if (isNaN(fecha.getTime())) return fechaStr;
+        return fecha.toLocaleDateString('es-ES');
+    }
+
+    function getBadgeClase(tipo, estado) {
+        if (tipo === 'reserva') {
+            if (estado === 'confirmada') return 'bg-success';
+            if (estado === 'pendiente') return 'bg-warning text-dark';
+            if (estado === 'cancelada') return 'bg-secondary';
+        }
+        if (tipo === 'bloqueo') return 'bg-danger';
+        if (tipo === 'bloqueo_habitacion') return 'bg-warning text-dark';
+        if (tipo === 'tarea') {
+            if (estado === 'completada') return 'bg-secondary';
+            return 'bg-primary';
+        }
+        return 'bg-dark';
+    }
+
+    function getBadgeTexto(tipo, estado) {
+        if (tipo === 'tarea') {
+            return estado === 'completada' ? 'Tarea completada' : 'Tarea pendiente';
+        }
+        if (tipo === 'bloqueo') return 'Bloqueo propiedad';
+        if (tipo === 'bloqueo_habitacion') return 'Bloqueo habitación';
+        if (tipo === 'reserva') {
+            if (estado === 'confirmada') return 'Reserva confirmada';
+            if (estado === 'pendiente') return 'Reserva pendiente';
+            if (estado === 'cancelada') return 'Reserva cancelada';
+            return 'Reserva';
+        }
+        return 'Evento';
+    }
+
+    function construirTooltip(event) {
+        const p = event.extendedProps || {};
+        const tipo = p.tipo || '';
+        const estado = p.estado || '';
+        const badgeClass = getBadgeClase(tipo, estado);
+        const badgeText = getBadgeTexto(tipo, estado);
+
+        let html = `
+            <div class="d-flex align-items-start justify-content-between gap-2 mb-2">
+                <h6>${event.title || 'Evento'}</h6>
+                <span class="badge ${badgeClass}">${badgeText}</span>
+            </div>
+        `;
+
+        html += `<p class="mini"><strong>Inicio:</strong> ${formatoFecha(event.startStr)}</p>`;
+
+        if (event.endStr) {
+            html += `<p class="mini"><strong>Fin:</strong> ${formatoFecha(event.endStr)}</p>`;
         }
 
-        var calendar = new FullCalendar.Calendar(calendarEl, {
-            initialView: 'dayGridMonth',
-            locale: 'es',
-            headerToolbar: {
-                left: 'prev,next today',
-                center: 'title',
-                right: 'dayGridMonth,timeGridWeek,timeGridDay'
-            },
-            events: '{{ url_for("calendario.eventos") }}',
-            eventClick: function(info) {
-                info.jsEvent.preventDefault();
-                if (info.event.url) {
-                    window.location.href = info.event.url;
-                }
-            },
-            eventDidMount: function(info) {
-                console.log('Evento cargado:', info.event.title); // Para depurar
-            }
-        });
+        if (p.propiedad) {
+            html += `<p class="mini"><strong>Propiedad:</strong> ${p.propiedad}</p>`;
+        }
 
-        calendar.render();
-        console.log('📅 Calendario renderizado');
+        if (p.habitacion) {
+            html += `<p class="mini"><strong>Habitación:</strong> ${p.habitacion}</p>`;
+        }
+
+        if (p.motivo) {
+            html += `<p class="mini"><strong>Motivo:</strong> ${p.motivo}</p>`;
+        }
+
+        if (p.descripcion) {
+            html += `<p class="mini"><strong>Descripción:</strong> ${p.descripcion}</p>`;
+        }
+
+        if (p.importe !== undefined && p.importe !== null && p.importe !== '') {
+            html += `<p class="mini"><strong>Importe:</strong> ${Number(p.importe).toFixed(2)} €</p>`;
+        }
+
+        if (p.saldo !== undefined && p.saldo !== null && p.saldo !== '') {
+            html += `<p class="mini"><strong>Saldo pendiente:</strong> ${Number(p.saldo).toFixed(2)} €</p>`;
+        }
+
+        return html;
+    }
+
+    function mostrarTooltip(info) {
+        popover.innerHTML = construirTooltip(info.event);
+        popover.style.display = 'block';
+
+        const rect = info.el.getBoundingClientRect();
+        const top = window.scrollY + rect.top - popover.offsetHeight - 10;
+        const left = window.scrollX + rect.left + (rect.width / 2) - (popover.offsetWidth / 2);
+
+        popover.style.top = Math.max(window.scrollY + 10, top) + 'px';
+        popover.style.left = Math.max(10, left) + 'px';
+    }
+
+    function ocultarTooltip() {
+        popover.style.display = 'none';
+        popover.innerHTML = '';
+    }
+
+    function coincideFiltro(evento) {
+        const props = evento.extendedProps || {};
+        const texto = normalizarTexto(filtroTexto.value);
+        const tipo = filtroTipo.value;
+        const estado = filtroEstado.value;
+
+        const bloqueTexto = [
+            evento.title,
+            props.tipo,
+            props.estado,
+            props.propiedad,
+            props.habitacion,
+            props.motivo,
+            props.descripcion
+        ].map(normalizarTexto).join(' ');
+
+        const pasaTexto = !texto || bloqueTexto.includes(texto);
+        const pasaTipo = tipo === 'todos' || props.tipo === tipo;
+
+        let pasaEstado = true;
+        if (estado !== 'todos') {
+            if (estado === 'pendiente_tarea') {
+                pasaEstado = props.tipo === 'tarea' && props.estado === 'pendiente';
+            } else if (estado === 'completada') {
+                pasaEstado = props.tipo === 'tarea' && props.estado === 'completada';
+            } else {
+                pasaEstado = props.estado === estado;
+            }
+        }
+
+        return pasaTexto && pasaTipo && pasaEstado;
+    }
+
+    function aplicarFiltros() {
+        const filtrados = allEvents.filter(coincideFiltro);
+        calendar.removeAllEvents();
+        calendar.addEventSource(filtrados);
+    }
+
+    const calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: 'dayGridMonth',
+        locale: 'es',
+        height: 'auto',
+        firstDay: 1,
+        navLinks: true,
+        nowIndicator: true,
+        dayMaxEvents: true,
+        selectable: true,
+        headerToolbar: {
+            left: 'prev,next today',
+            center: 'title',
+            right: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek'
+        },
+        buttonText: {
+            today: 'Hoy',
+            month: 'Mes',
+            week: 'Semana',
+            day: 'Día',
+            list: 'Lista'
+        },
+        events: function(fetchInfo, successCallback, failureCallback) {
+            fetch('{{ url_for("calendario.eventos") }}')
+                .then(response => response.json())
+                .then(data => {
+                    allEvents = Array.isArray(data) ? data : [];
+                    successCallback(allEvents.filter(coincideFiltro));
+                })
+                .catch(error => {
+                    console.error('Error cargando eventos:', error);
+                    failureCallback(error);
+                });
+        },
+        dateClick: function(info) {
+            const fecha = info.dateStr;
+            window.location.href = "{{ url_for('reservas.nueva') }}" + "?fecha_entrada=" + fecha;
+        },
+        eventClick: function(info) {
+            info.jsEvent.preventDefault();
+            ocultarTooltip();
+            if (info.event.url) {
+                window.location.href = info.event.url;
+            }
+        },
+        eventMouseEnter: function(info) {
+            mostrarTooltip(info);
+        },
+        eventMouseLeave: function() {
+            ocultarTooltip();
+        },
+        loading: function(isLoading) {
+            calendarEl.style.opacity = isLoading ? '0.65' : '1';
+        }
     });
+
+    calendar.render();
+
+    filtroTexto.addEventListener('input', aplicarFiltros);
+    filtroTipo.addEventListener('change', aplicarFiltros);
+    filtroEstado.addEventListener('change', aplicarFiltros);
+
+    document.addEventListener('scroll', ocultarTooltip, true);
+    window.addEventListener('resize', ocultarTooltip);
+});
 </script>
 {% endblock %}

@@ -64,9 +64,7 @@ def nuevo(reserva_id):
             tipo_documento=form.tipo_documento.data
         )
         
-        # Asignar documentos con cifrado
-        huesped.set_numero_documento(form.numero_documento.data)
-        huesped.set_numero_soporte(form.numero_soporte.data)
+  
         
         # Domicilio
         if form.mismo_domicilio.data:
