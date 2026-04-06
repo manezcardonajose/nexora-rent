@@ -2,4 +2,7 @@ Flask
 gunicorn
 SQLAlchemy
 Flask-SQLAlchemy
+Flask-Login
 python-dotenv
+Werkzeug
+Jinja2
