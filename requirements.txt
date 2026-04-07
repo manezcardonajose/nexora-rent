@@ -6,5 +6,6 @@ Flask-Login
 Flask-Mail
 python-dotenv
 requests
+icalendar
 Werkzeug
 Jinja2
